@@ -1,0 +1,667 @@
+{
+  "metadata": {
+    "source_image": "one-line-diagram-ge-swgr-vb1.png",
+    "extracted_at": "2025-09-16T23:17:30.397103Z",
+    "title": "Double-Ended 115kV/13.8kV Substation One-Line (GE VB1 SWGR)",
+    "notes": [
+      "Values marked null or with low confidence were not legible in the PNG.",
+      "Diagram shows two 115kV sources, two 115/13.8kV transformers, two 13.8kV buses with a normally-open bus tie, feeder breakers, protection, and DC control."
+    ]
+  },
+  "ontology": {
+    "node_types": {
+      "GridSource": {
+        "attrs": [
+          "name",
+          "kv",
+          "frequency_hz",
+          "sc_mva",
+          "x_over_r"
+        ]
+      },
+      "SurgeArrester": {
+        "attrs": [
+          "class",
+          "kv",
+          "location"
+        ]
+      },
+      "PotentialTransformer": {
+        "attrs": [
+          "ratio",
+          "purpose"
+        ]
+      },
+      "CurrentTransformer": {
+        "attrs": [
+          "ratio",
+          "purpose"
+        ]
+      },
+      "Meter": {
+        "attrs": [
+          "purpose"
+        ]
+      },
+      "Transformer": {
+        "attrs": [
+          "name",
+          "mva_ratings",
+          "hv_kv",
+          "lv_kv",
+          "vector_group",
+          "impedance_pct",
+          "cooling",
+          "notes"
+        ]
+      },
+      "Breaker": {
+        "attrs": [
+          "name",
+          "kv_class",
+          "continuous_a",
+          "interrupting_ka",
+          "type",
+          "position",
+          "normally_open"
+        ]
+      },
+      "Busbar": {
+        "attrs": [
+          "name",
+          "kv",
+          "ampacity_a"
+        ]
+      },
+      "CapacitorBank": {
+        "attrs": [
+          "kvar",
+          "kv_class",
+          "qty"
+        ]
+      },
+      "Battery": {
+        "attrs": [
+          "dc_v",
+          "purpose"
+        ]
+      },
+      "RelayFunction": {
+        "attrs": [
+          "device_code",
+          "description"
+        ]
+      },
+      "Feeder": {
+        "attrs": [
+          "name",
+          "kv",
+          "load_desc"
+        ]
+      }
+    },
+    "edge_types": {
+      "CONNECTS_TO": {
+        "attrs": [
+          "via",
+          "notes"
+        ]
+      },
+      "PROTECTS": {
+        "attrs": [
+          "notes"
+        ]
+      },
+      "MEASURES": {
+        "attrs": [
+          "notes"
+        ]
+      },
+      "CONTROLS": {
+        "attrs": [
+          "notes"
+        ]
+      },
+      "POWERED_BY": {
+        "attrs": []
+      },
+      "LOCATED_ON": {
+        "attrs": []
+      }
+    }
+  },
+  "nodes": [
+    {
+      "id": "GS_A",
+      "type": "GridSource",
+      "name": "Grid Source A",
+      "kv": 115,
+      "frequency_hz": 60,
+      "sc_mva": 5000,
+      "x_over_r": 8
+    },
+    {
+      "id": "GS_B",
+      "type": "GridSource",
+      "name": "Grid Source B",
+      "kv": 115,
+      "frequency_hz": 60,
+      "sc_mva": 5000,
+      "x_over_r": 8
+    },
+    {
+      "id": "SA_A",
+      "type": "SurgeArrester",
+      "class": "Station",
+      "kv": 115,
+      "location": "HV_A"
+    },
+    {
+      "id": "SA_B",
+      "type": "SurgeArrester",
+      "class": "Station",
+      "kv": 115,
+      "location": "HV_B"
+    },
+    {
+      "id": "PT_A",
+      "type": "PotentialTransformer",
+      "ratio": null,
+      "purpose": "HV metering/protection"
+    },
+    {
+      "id": "CT_A",
+      "type": "CurrentTransformer",
+      "ratio": null,
+      "purpose": "HV metering/protection"
+    },
+    {
+      "id": "PT_B",
+      "type": "PotentialTransformer",
+      "ratio": null,
+      "purpose": "HV metering/protection"
+    },
+    {
+      "id": "CT_B",
+      "type": "CurrentTransformer",
+      "ratio": null,
+      "purpose": "HV metering/protection"
+    },
+    {
+      "id": "MTR_A",
+      "type": "Meter",
+      "purpose": "Utility metering - left"
+    },
+    {
+      "id": "MTR_B",
+      "type": "Meter",
+      "purpose": "Utility metering - right"
+    },
+    {
+      "id": "TX1",
+      "type": "Transformer",
+      "name": "XFMR A",
+      "mva_ratings": [
+        12,
+        16,
+        20
+      ],
+      "hv_kv": 115,
+      "lv_kv": 13.8,
+      "vector_group": "Delta\u2013Wye (grounded)",
+      "impedance_pct": null,
+      "cooling": null,
+      "notes": "Ratings from title block; exact impedance unreadable in PNG"
+    },
+    {
+      "id": "TX2",
+      "type": "Transformer",
+      "name": "XFMR B",
+      "mva_ratings": [
+        12,
+        16,
+        20
+      ],
+      "hv_kv": 115,
+      "lv_kv": 13.8,
+      "vector_group": "Delta\u2013Wye (grounded)",
+      "impedance_pct": null,
+      "cooling": null,
+      "notes": "Same as TX1"
+    },
+    {
+      "id": "BUS1",
+      "type": "Busbar",
+      "name": "Bus 1",
+      "kv": 13.8,
+      "ampacity_a": null
+    },
+    {
+      "id": "BUS2",
+      "type": "Busbar",
+      "name": "Bus 2",
+      "kv": 13.8,
+      "ampacity_a": null
+    },
+    {
+      "id": "BTIE",
+      "type": "VB1 vacuum",
+      "name": "Bus Tie Breaker",
+      "kv_class": 13.8,
+      "continuous_a": 1200,
+      "interrupting_ka": "15\u201320",
+      "position": "between BUS1 and BUS2",
+      "normally_open": true
+    },
+    {
+      "id": "MAIN1",
+      "type": "VB1 vacuum",
+      "name": "Main Breaker 1",
+      "kv_class": 13.8,
+      "continuous_a": 1200,
+      "interrupting_ka": "15\u201320",
+      "position": "TX1 secondary to BUS1",
+      "normally_open": false
+    },
+    {
+      "id": "MAIN2",
+      "type": "VB1 vacuum",
+      "name": "Main Breaker 2",
+      "kv_class": 13.8,
+      "continuous_a": 1200,
+      "interrupting_ka": "15\u201320",
+      "position": "TX2 secondary to BUS2",
+      "normally_open": false
+    },
+    {
+      "id": "FDR1",
+      "type": "Feeder",
+      "name": "Feeder 1",
+      "kv": 13.8,
+      "load_desc": null
+    },
+    {
+      "id": "FDR2",
+      "type": "Feeder",
+      "name": "Feeder 2",
+      "kv": 13.8,
+      "load_desc": null
+    },
+    {
+      "id": "FDR3",
+      "type": "Feeder",
+      "name": "Feeder 3",
+      "kv": 13.8,
+      "load_desc": null
+    },
+    {
+      "id": "FDR4",
+      "type": "Feeder",
+      "name": "Feeder 4",
+      "kv": 13.8,
+      "load_desc": null
+    },
+    {
+      "id": "FDR5",
+      "type": "Feeder",
+      "name": "Feeder 5",
+      "kv": 13.8,
+      "load_desc": null
+    },
+    {
+      "id": "FDR6",
+      "type": "Feeder",
+      "name": "Feeder 6",
+      "kv": 13.8,
+      "load_desc": null
+    },
+    {
+      "id": "CAP1",
+      "type": "CapacitorBank",
+      "kvar": 3000,
+      "kv_class": 13.8,
+      "qty": 1
+    },
+    {
+      "id": "CAP2",
+      "type": "CapacitorBank",
+      "kvar": 3000,
+      "kv_class": 13.8,
+      "qty": 1
+    },
+    {
+      "id": "BAT",
+      "type": "Battery",
+      "dc_v": 125,
+      "purpose": "Trip and control power for switchgear/relays"
+    },
+    {
+      "id": "R_87T1",
+      "type": "RelayFunction",
+      "device_code": "87T",
+      "description": "Transformer differential protection - TX1"
+    },
+    {
+      "id": "R_87T2",
+      "type": "RelayFunction",
+      "device_code": "87T",
+      "description": "Transformer differential protection - TX2"
+    },
+    {
+      "id": "R_50_51M1",
+      "type": "RelayFunction",
+      "device_code": "50/51",
+      "description": "Instantaneous/time overcurrent - Main 1"
+    },
+    {
+      "id": "R_50_51M2",
+      "type": "RelayFunction",
+      "device_code": "50/51",
+      "description": "Instantaneous/time overcurrent - Main 2"
+    },
+    {
+      "id": "R_27",
+      "type": "RelayFunction",
+      "device_code": "27",
+      "description": "Undervoltage"
+    },
+    {
+      "id": "R_59",
+      "type": "RelayFunction",
+      "device_code": "59",
+      "description": "Overvoltage"
+    },
+    {
+      "id": "R_81",
+      "type": "RelayFunction",
+      "device_code": "81",
+      "description": "Frequency"
+    },
+    {
+      "id": "R_50_51F",
+      "type": "RelayFunction",
+      "device_code": "50/51",
+      "description": "Feeder overcurrent (typical for all feeders)"
+    }
+  ],
+  "edges": [
+    {
+      "from": "GS_A",
+      "type": "CONNECTS_TO",
+      "to": "SA_A",
+      "via": "overhead line",
+      "notes": "incoming 115kV"
+    },
+    {
+      "from": "SA_A",
+      "type": "CONNECTS_TO",
+      "to": "PT_A",
+      "via": "HV connection",
+      "notes": ""
+    },
+    {
+      "from": "SA_A",
+      "type": "CONNECTS_TO",
+      "to": "CT_A",
+      "via": "HV connection",
+      "notes": ""
+    },
+    {
+      "from": "PT_A",
+      "type": "MEASURES",
+      "to": "GS_A",
+      "notes": "voltage sensing for protection/metering"
+    },
+    {
+      "from": "CT_A",
+      "type": "MEASURES",
+      "to": "GS_A",
+      "notes": "current sensing for protection/metering"
+    },
+    {
+      "from": "GS_A",
+      "type": "CONNECTS_TO",
+      "to": "TX1",
+      "via": "HV bushings",
+      "notes": "115kV delta"
+    },
+    {
+      "from": "GS_B",
+      "type": "CONNECTS_TO",
+      "to": "SA_B",
+      "via": "overhead line",
+      "notes": "incoming 115kV"
+    },
+    {
+      "from": "SA_B",
+      "type": "CONNECTS_TO",
+      "to": "PT_B",
+      "via": "HV connection",
+      "notes": ""
+    },
+    {
+      "from": "SA_B",
+      "type": "CONNECTS_TO",
+      "to": "CT_B",
+      "via": "HV connection",
+      "notes": ""
+    },
+    {
+      "from": "PT_B",
+      "type": "MEASURES",
+      "to": "GS_B",
+      "notes": "voltage sensing for protection/metering"
+    },
+    {
+      "from": "CT_B",
+      "type": "MEASURES",
+      "to": "GS_B",
+      "notes": "current sensing for protection/metering"
+    },
+    {
+      "from": "GS_B",
+      "type": "CONNECTS_TO",
+      "to": "TX2",
+      "via": "HV bushings",
+      "notes": "115kV delta"
+    },
+    {
+      "from": "TX1",
+      "type": "CONNECTS_TO",
+      "to": "MAIN1",
+      "via": "LV bushings",
+      "notes": "13.8kV wye grounded"
+    },
+    {
+      "from": "TX2",
+      "type": "CONNECTS_TO",
+      "to": "MAIN2",
+      "via": "LV bushings",
+      "notes": "13.8kV wye grounded"
+    },
+    {
+      "from": "MAIN1",
+      "type": "CONNECTS_TO",
+      "to": "BUS1",
+      "via": "bus duct/cable",
+      "notes": ""
+    },
+    {
+      "from": "MAIN2",
+      "type": "CONNECTS_TO",
+      "to": "BUS2",
+      "via": "bus duct/cable",
+      "notes": ""
+    },
+    {
+      "from": "BUS1",
+      "type": "CONNECTS_TO",
+      "to": "BTIE",
+      "via": "tie cubicle",
+      "notes": "one side of tie"
+    },
+    {
+      "from": "BUS2",
+      "type": "CONNECTS_TO",
+      "to": "BTIE",
+      "via": "tie cubicle",
+      "notes": "other side of tie"
+    },
+    {
+      "from": "BTIE",
+      "type": "CONNECTS_TO",
+      "to": "BUS1",
+      "via": "closed position path",
+      "notes": "normally open"
+    },
+    {
+      "from": "BTIE",
+      "type": "CONNECTS_TO",
+      "to": "BUS2",
+      "via": "closed position path",
+      "notes": "normally open"
+    },
+    {
+      "from": "BUS1",
+      "type": "LOCATED_ON",
+      "to": "FDR1"
+    },
+    {
+      "from": "BUS1",
+      "type": "LOCATED_ON",
+      "to": "FDR2"
+    },
+    {
+      "from": "BUS1",
+      "type": "LOCATED_ON",
+      "to": "FDR3"
+    },
+    {
+      "from": "BUS2",
+      "type": "LOCATED_ON",
+      "to": "FDR4"
+    },
+    {
+      "from": "BUS2",
+      "type": "LOCATED_ON",
+      "to": "FDR5"
+    },
+    {
+      "from": "BUS2",
+      "type": "LOCATED_ON",
+      "to": "FDR6"
+    },
+    {
+      "from": "BUS1",
+      "type": "CONNECTS_TO",
+      "to": "CAP1",
+      "via": "breaker",
+      "notes": "capacitor on Bus 1"
+    },
+    {
+      "from": "BUS2",
+      "type": "CONNECTS_TO",
+      "to": "CAP2",
+      "via": "breaker",
+      "notes": "capacitor on Bus 2"
+    },
+    {
+      "from": "R_87T1",
+      "type": "PROTECTS",
+      "to": "TX1",
+      "notes": "differential relay"
+    },
+    {
+      "from": "R_87T2",
+      "type": "PROTECTS",
+      "to": "TX2",
+      "notes": "differential relay"
+    },
+    {
+      "from": "R_50_51M1",
+      "type": "PROTECTS",
+      "to": "MAIN1",
+      "notes": "OC relay controlling trip of Main 1"
+    },
+    {
+      "from": "R_50_51M2",
+      "type": "PROTECTS",
+      "to": "MAIN2",
+      "notes": "OC relay controlling trip of Main 2"
+    },
+    {
+      "from": "R_27",
+      "type": "PROTECTS",
+      "to": "BUS1",
+      "notes": "undervoltage load shedding / trip"
+    },
+    {
+      "from": "R_27",
+      "type": "PROTECTS",
+      "to": "BUS2",
+      "notes": "undervoltage load shedding / trip"
+    },
+    {
+      "from": "R_59",
+      "type": "PROTECTS",
+      "to": "BUS1",
+      "notes": "overvoltage"
+    },
+    {
+      "from": "R_59",
+      "type": "PROTECTS",
+      "to": "BUS2",
+      "notes": "overvoltage"
+    },
+    {
+      "from": "R_81",
+      "type": "PROTECTS",
+      "to": "BUS1",
+      "notes": "frequency"
+    },
+    {
+      "from": "R_81",
+      "type": "PROTECTS",
+      "to": "BUS2",
+      "notes": "frequency"
+    },
+    {
+      "from": "BAT",
+      "type": "POWERED_BY",
+      "to": "MAIN1"
+    },
+    {
+      "from": "BAT",
+      "type": "POWERED_BY",
+      "to": "MAIN2"
+    },
+    {
+      "from": "BAT",
+      "type": "POWERED_BY",
+      "to": "BTIE"
+    }
+  ],
+  "calculations": {
+    "short_circuit": {
+      "context": "Calculated maximum available short circuit at each main 13.8kV bus",
+      "bus1": {
+        "first_cycle_asym_ka": 12.4,
+        "one_point_five_cycles_sym_ka": 7.2
+      },
+      "bus2": {
+        "first_cycle_asym_ka": 12.4,
+        "one_point_five_cycles_sym_ka": 7.2
+      },
+      "assumptions": [
+        "values taken from the callout in center of drawing"
+      ]
+    },
+    "breaker_spec": {
+      "type": "GE VB1 vacuum",
+      "kv_class": 13.8,
+      "continuous_a": 1200,
+      "interrupting_ka_range": "15\u201320",
+      "k_factor": 1.0
+    }
+  }
+}
