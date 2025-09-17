@@ -228,8 +228,11 @@ def summary(input_file: Optional[Path] = typer.Argument(None, help="Input JSON f
 def store(
     input_file: Optional[Path] = typer.Argument(None, help="Input JSON file"),
     clear: bool = typer.Option(False, "--clear", help="Clear database before storing"),
+    diagram_id: Optional[str] = typer.Option(
+        None, "--diagram-id", help="Custom diagram ID (defaults to title-based ID)"
+    ),
 ):
-    """Store diagram in Neo4j database."""
+    """Store diagram in Neo4j database with partitioning support."""
     data_file = input_file or get_data_file()
 
     if not validate_data_file(data_file):
@@ -259,7 +262,7 @@ def store(
                 client.clear_database()
 
             console.print("[yellow]Storing diagram in Neo4j...[/yellow]")
-            result = client.store_diagram(diagram)
+            result = client.store_diagram(diagram, diagram_id)
 
             # Display results
             result_table = Table(title="Storage Results")
@@ -270,7 +273,11 @@ def store(
                 result_table.add_row(key.replace("_", " ").title(), str(value))
 
             console.print(result_table)
-            console.print("[green]✓[/green] Successfully stored diagram in Neo4j!")
+            console.print(f"[green]✓[/green] Successfully stored diagram in Neo4j!")
+            console.print(
+                f"[cyan]ℹ[/cyan] Diagram ID: {result.get('diagram_id', 'Unknown')}"
+            )
+            console.print(f"[cyan]ℹ[/cyan] Use 'neo4j list' to see all stored diagrams")
 
     except Exception as e:
         console.print(f"[red]✗[/red] Error storing diagram: {e}")
@@ -501,6 +508,207 @@ def query(cypher_query: str = typer.Argument(..., help="Cypher query to execute"
 
     except Exception as e:
         console.print(f"[red]✗[/red] Error executing query: {e}")
+        raise typer.Exit(1)
+
+
+@neo4j_app.command()
+def list():
+    """List all stored diagrams."""
+    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+        raise typer.Exit(1)
+
+    try:
+        with Neo4jClient(
+            uri=_global_options["neo4j_uri"],
+            username=_global_options["neo4j_username"],
+            password=_global_options["neo4j_password"],
+            database=_global_options["neo4j_database"],
+        ) as client:
+            console.print(Panel("Stored Diagrams", style="blue"))
+
+            diagrams = client.list_diagrams()
+
+            if diagrams:
+                table = Table(title="Available Diagrams")
+                table.add_column("Index", style="cyan")
+                table.add_column("Title", style="green")
+                table.add_column("Source", style="yellow")
+                table.add_column("Extracted", style="magenta")
+                table.add_column("Diagram ID", style="dim")
+
+                for diagram in diagrams:
+                    table.add_row(
+                        str(diagram.get("index", "?")),
+                        diagram.get("title", "Unknown"),
+                        diagram.get("source", "Unknown"),
+                        diagram.get("extracted_at", "Unknown"),
+                        diagram.get("diagram_id", "Unknown")[:50] + "..."
+                        if len(diagram.get("diagram_id", "")) > 50
+                        else diagram.get("diagram_id", "Unknown"),
+                    )
+
+                console.print(table)
+                console.print(f"[green]✓[/green] Found {len(diagrams)} diagram(s)")
+                console.print(
+                    "[cyan]ℹ[/cyan] Use index numbers (1, 2, 3...) or full diagram IDs for commands"
+                )
+            else:
+                console.print("[yellow]ℹ[/yellow] No diagrams found in database")
+
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error listing diagrams: {e}")
+        raise typer.Exit(1)
+
+
+@neo4j_app.command()
+def delete(
+    identifier: str = typer.Argument(
+        ..., help="Diagram index number or diagram ID to delete"
+    ),
+    confirm: bool = typer.Option(False, "--confirm", help="Skip confirmation prompt"),
+):
+    """Delete a specific diagram and all its data."""
+    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+        raise typer.Exit(1)
+
+    try:
+        with Neo4jClient(
+            uri=_global_options["neo4j_uri"],
+            username=_global_options["neo4j_username"],
+            password=_global_options["neo4j_password"],
+            database=_global_options["neo4j_database"],
+        ) as client:
+            # Resolve identifier to diagram_id
+            diagram_id = client.resolve_diagram_identifier(identifier)
+
+            if not diagram_id:
+                console.print(f"[red]✗[/red] Diagram '{identifier}' not found")
+                console.print(
+                    "[yellow]ℹ[/yellow] Use 'neo4j list' to see available diagrams"
+                )
+                console.print(
+                    "[yellow]ℹ[/yellow] Use index numbers (1, 2, 3...) or full diagram IDs"
+                )
+                raise typer.Exit(1)
+
+            # Confirmation prompt
+            if not confirm:
+                console.print(
+                    f"[yellow]⚠[/yellow] This will permanently delete diagram '{diagram_id}' and all its data"
+                )
+                if not typer.confirm("Are you sure you want to continue?"):
+                    console.print("[yellow]ℹ[/yellow] Operation cancelled")
+                    raise typer.Exit(0)
+
+            console.print(Panel(f"Deleting Diagram: {diagram_id}", style="red"))
+
+            result = client.delete_diagram(diagram_id)
+
+            # Display results
+            result_table = Table(title="Deletion Results")
+            result_table.add_column("Item", style="cyan")
+            result_table.add_column("Count", style="magenta")
+
+            for key, value in result.items():
+                if key != "diagram_id":
+                    result_table.add_row(key.replace("_", " ").title(), str(value))
+
+            console.print(result_table)
+            console.print(
+                f"[green]✓[/green] Successfully deleted diagram '{diagram_id}'"
+            )
+
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error deleting diagram: {e}")
+        raise typer.Exit(1)
+
+
+@neo4j_app.command()
+def summary_by_id(
+    identifier: str = typer.Argument(
+        ..., help="Diagram index number or diagram ID to summarize"
+    ),
+):
+    """Get a summary of a specific diagram."""
+    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+        raise typer.Exit(1)
+
+    try:
+        with Neo4jClient(
+            uri=_global_options["neo4j_uri"],
+            username=_global_options["neo4j_username"],
+            password=_global_options["neo4j_password"],
+            database=_global_options["neo4j_database"],
+        ) as client:
+            # Resolve identifier to diagram_id
+            diagram_id = client.resolve_diagram_identifier(identifier)
+
+            if not diagram_id:
+                console.print(f"[red]✗[/red] Diagram '{identifier}' not found")
+                console.print(
+                    "[yellow]ℹ[/yellow] Use 'neo4j list' to see available diagrams"
+                )
+                console.print(
+                    "[yellow]ℹ[/yellow] Use index numbers (1, 2, 3...) or full diagram IDs"
+                )
+                raise typer.Exit(1)
+
+            console.print(Panel(f"Diagram Summary: {identifier}", style="blue"))
+
+            summary = client.get_diagram_summary_by_id(diagram_id)
+
+            if not summary.get("metadata"):
+                console.print(f"[red]✗[/red] Diagram '{identifier}' not found")
+                console.print(
+                    "[yellow]ℹ[/yellow] Use 'neo4j list' to see available diagrams"
+                )
+                raise typer.Exit(1)
+
+            # Display metadata
+            metadata = summary["metadata"]
+            console.print(Panel("Diagram Metadata", style="green"))
+            console.print(f"[cyan]ℹ[/cyan] Title: {metadata.get('title', 'Unknown')}")
+            console.print(f"[cyan]ℹ[/cyan] Source: {metadata.get('source', 'Unknown')}")
+            console.print(
+                f"[cyan]ℹ[/cyan] Extracted: {metadata.get('extracted_at', 'Unknown')}"
+            )
+
+            # Display statistics
+            stats_table = Table(title="Diagram Statistics")
+            stats_table.add_column("Metric", style="cyan")
+            stats_table.add_column("Value", style="green")
+
+            stats_table.add_row("Total Nodes", str(summary["total_nodes"]))
+            stats_table.add_row(
+                "Total Relationships", str(summary["total_relationships"])
+            )
+
+            console.print(stats_table)
+
+            # Display node types
+            if summary["node_counts"]:
+                node_table = Table(title="Node Types")
+                node_table.add_column("Type", style="cyan")
+                node_table.add_column("Count", style="green")
+
+                for node_type, count in summary["node_counts"].items():
+                    node_table.add_row(node_type, str(count))
+
+                console.print(node_table)
+
+            # Display relationship types
+            if summary["relationship_counts"]:
+                rel_table = Table(title="Relationship Types")
+                rel_table.add_column("Type", style="cyan")
+                rel_table.add_column("Count", style="green")
+
+                for rel_type, count in summary["relationship_counts"].items():
+                    rel_table.add_row(rel_type, str(count))
+
+                console.print(rel_table)
+
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error getting diagram summary: {e}")
         raise typer.Exit(1)
 
 

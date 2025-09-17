@@ -1,0 +1,387 @@
+{
+  "metadata": {
+    "source_image": "industrial-distribution-example.png",
+    "extracted_at": "2025-01-27T10:30:00.000000Z",
+    "title": "Industrial Distribution System - 480V Motor Control Center",
+    "notes": [
+      "Example industrial distribution system with motor control center",
+      "Shows typical motor protection and control circuits",
+      "Includes power factor correction and emergency systems"
+    ]
+  },
+  "ontology": {
+    "node_types": {
+      "UtilitySource": {
+        "attrs": ["name", "kv", "frequency_hz", "sc_mva"]
+      },
+      "Transformer": {
+        "attrs": [
+          "name",
+          "mva_rating",
+          "hv_kv",
+          "lv_kv",
+          "impedance_pct",
+          "cooling"
+        ]
+      },
+      "MainBreaker": {
+        "attrs": ["name", "kv_class", "continuous_a", "interrupting_ka", "type"]
+      },
+      "Busbar": {
+        "attrs": ["name", "kv", "ampacity_a"]
+      },
+      "Motor": {
+        "attrs": [
+          "name",
+          "hp",
+          "voltage",
+          "current_a",
+          "efficiency_pct",
+          "power_factor"
+        ]
+      },
+      "MotorStarter": {
+        "attrs": ["name", "type", "hp_rating", "voltage_rating"]
+      },
+      "ProtectiveRelay": {
+        "attrs": ["name", "device_code", "description", "pickup_a", "time_dial"]
+      },
+      "CapacitorBank": {
+        "attrs": ["name", "kvar", "kv_class", "qty"]
+      },
+      "EmergencyGenerator": {
+        "attrs": ["name", "kva_rating", "voltage", "fuel_type"]
+      },
+      "TransferSwitch": {
+        "attrs": ["name", "type", "kv_class", "continuous_a"]
+      }
+    },
+    "edge_types": {
+      "CONNECTS_TO": {
+        "attrs": ["via", "notes"]
+      },
+      "PROTECTS": {
+        "attrs": ["notes"]
+      },
+      "CONTROLS": {
+        "attrs": ["notes"]
+      },
+      "POWERED_BY": {
+        "attrs": []
+      },
+      "LOCATED_ON": {
+        "attrs": []
+      }
+    }
+  },
+  "nodes": [
+    {
+      "id": "UTIL",
+      "type": "UtilitySource",
+      "name": "Utility Supply",
+      "kv": 13.8,
+      "frequency_hz": 60,
+      "sc_mva": 100
+    },
+    {
+      "id": "XFM1",
+      "type": "Transformer",
+      "name": "Main Transformer",
+      "mva_rating": 2.5,
+      "hv_kv": 13.8,
+      "lv_kv": 0.48,
+      "impedance_pct": 5.75,
+      "cooling": "ONAN"
+    },
+    {
+      "id": "MAIN",
+      "type": "MainBreaker",
+      "name": "Main Breaker",
+      "kv_class": 0.48,
+      "continuous_a": 3000,
+      "interrupting_ka": 65,
+      "type": "Molded Case"
+    },
+    {
+      "id": "MCC_BUS",
+      "type": "Busbar",
+      "name": "MCC Main Bus",
+      "kv": 0.48,
+      "ampacity_a": 3000
+    },
+    {
+      "id": "MOTOR1",
+      "type": "Motor",
+      "name": "Pump Motor #1",
+      "hp": 50,
+      "voltage": 480,
+      "current_a": 65,
+      "efficiency_pct": 94.5,
+      "power_factor": 0.87
+    },
+    {
+      "id": "MOTOR2",
+      "type": "Motor",
+      "name": "Fan Motor #1",
+      "hp": 25,
+      "voltage": 480,
+      "current_a": 32,
+      "efficiency_pct": 92.1,
+      "power_factor": 0.85
+    },
+    {
+      "id": "MOTOR3",
+      "type": "Motor",
+      "name": "Compressor Motor",
+      "hp": 100,
+      "voltage": 480,
+      "current_a": 125,
+      "efficiency_pct": 95.2,
+      "power_factor": 0.89
+    },
+    {
+      "id": "STARTER1",
+      "type": "MotorStarter",
+      "name": "Pump Starter",
+      "type": "Soft Start",
+      "hp_rating": 50,
+      "voltage_rating": 480
+    },
+    {
+      "id": "STARTER2",
+      "type": "MotorStarter",
+      "name": "Fan Starter",
+      "type": "Direct Online",
+      "hp_rating": 25,
+      "voltage_rating": 480
+    },
+    {
+      "id": "STARTER3",
+      "type": "MotorStarter",
+      "name": "Compressor Starter",
+      "type": "VFD",
+      "hp_rating": 100,
+      "voltage_rating": 480
+    },
+    {
+      "id": "RELAY1",
+      "type": "ProtectiveRelay",
+      "name": "Motor Protection Relay #1",
+      "device_code": "50/51",
+      "description": "Overcurrent protection for Pump Motor",
+      "pickup_a": 75,
+      "time_dial": 0.5
+    },
+    {
+      "id": "RELAY2",
+      "type": "ProtectiveRelay",
+      "name": "Motor Protection Relay #2",
+      "device_code": "50/51",
+      "description": "Overcurrent protection for Fan Motor",
+      "pickup_a": 40,
+      "time_dial": 0.5
+    },
+    {
+      "id": "RELAY3",
+      "type": "ProtectiveRelay",
+      "name": "Motor Protection Relay #3",
+      "device_code": "50/51",
+      "description": "Overcurrent protection for Compressor Motor",
+      "pickup_a": 150,
+      "time_dial": 0.5
+    },
+    {
+      "id": "CAP1",
+      "type": "CapacitorBank",
+      "name": "Power Factor Correction",
+      "kvar": 300,
+      "kv_class": 0.48,
+      "qty": 1
+    },
+    {
+      "id": "GEN1",
+      "type": "EmergencyGenerator",
+      "name": "Emergency Generator",
+      "kva_rating": 500,
+      "voltage": 480,
+      "fuel_type": "Diesel"
+    },
+    {
+      "id": "ATS1",
+      "type": "TransferSwitch",
+      "name": "Automatic Transfer Switch",
+      "type": "Open Transition",
+      "kv_class": 0.48,
+      "continuous_a": 3000
+    }
+  ],
+  "edges": [
+    {
+      "from": "UTIL",
+      "type": "CONNECTS_TO",
+      "to": "XFM1",
+      "via": "13.8kV cable",
+      "notes": "Primary supply"
+    },
+    {
+      "from": "XFM1",
+      "type": "CONNECTS_TO",
+      "to": "MAIN",
+      "via": "480V bus duct",
+      "notes": "Secondary supply"
+    },
+    {
+      "from": "MAIN",
+      "type": "CONNECTS_TO",
+      "to": "MCC_BUS",
+      "via": "480V bus duct",
+      "notes": "Main distribution"
+    },
+    {
+      "from": "MCC_BUS",
+      "type": "CONNECTS_TO",
+      "to": "STARTER1",
+      "via": "480V feeder",
+      "notes": "Pump motor supply"
+    },
+    {
+      "from": "MCC_BUS",
+      "type": "CONNECTS_TO",
+      "to": "STARTER2",
+      "via": "480V feeder",
+      "notes": "Fan motor supply"
+    },
+    {
+      "from": "MCC_BUS",
+      "type": "CONNECTS_TO",
+      "to": "STARTER3",
+      "via": "480V feeder",
+      "notes": "Compressor motor supply"
+    },
+    {
+      "from": "STARTER1",
+      "type": "CONNECTS_TO",
+      "to": "MOTOR1",
+      "via": "480V motor cable",
+      "notes": "Motor connection"
+    },
+    {
+      "from": "STARTER2",
+      "type": "CONNECTS_TO",
+      "to": "MOTOR2",
+      "via": "480V motor cable",
+      "notes": "Motor connection"
+    },
+    {
+      "from": "STARTER3",
+      "type": "CONNECTS_TO",
+      "to": "MOTOR3",
+      "via": "480V motor cable",
+      "notes": "Motor connection"
+    },
+    {
+      "from": "RELAY1",
+      "type": "PROTECTS",
+      "to": "MOTOR1",
+      "notes": "Overcurrent protection"
+    },
+    {
+      "from": "RELAY2",
+      "type": "PROTECTS",
+      "to": "MOTOR2",
+      "notes": "Overcurrent protection"
+    },
+    {
+      "from": "RELAY3",
+      "type": "PROTECTS",
+      "to": "MOTOR3",
+      "notes": "Overcurrent protection"
+    },
+    {
+      "from": "RELAY1",
+      "type": "CONTROLS",
+      "to": "STARTER1",
+      "notes": "Trip control"
+    },
+    {
+      "from": "RELAY2",
+      "type": "CONTROLS",
+      "to": "STARTER2",
+      "notes": "Trip control"
+    },
+    {
+      "from": "RELAY3",
+      "type": "CONTROLS",
+      "to": "STARTER3",
+      "notes": "Trip control"
+    },
+    {
+      "from": "MCC_BUS",
+      "type": "CONNECTS_TO",
+      "to": "CAP1",
+      "via": "480V feeder",
+      "notes": "Power factor correction"
+    },
+    {
+      "from": "GEN1",
+      "type": "CONNECTS_TO",
+      "to": "ATS1",
+      "via": "480V cable",
+      "notes": "Emergency supply"
+    },
+    {
+      "from": "MCC_BUS",
+      "type": "CONNECTS_TO",
+      "to": "ATS1",
+      "via": "480V cable",
+      "notes": "Normal supply"
+    },
+    {
+      "from": "ATS1",
+      "type": "CONNECTS_TO",
+      "to": "MCC_BUS",
+      "via": "480V bus duct",
+      "notes": "Load transfer"
+    }
+  ],
+  "calculations": {
+    "motor_starting": {
+      "context": "Motor starting current calculations for protection coordination",
+      "pump_motor": {
+        "locked_rotor_current_a": 390,
+        "starting_time_sec": 2.5,
+        "acceleration_torque_pct": 150
+      },
+      "fan_motor": {
+        "locked_rotor_current_a": 192,
+        "starting_time_sec": 1.8,
+        "acceleration_torque_pct": 120
+      },
+      "compressor_motor": {
+        "locked_rotor_current_a": 750,
+        "starting_time_sec": 4.2,
+        "acceleration_torque_pct": 180
+      }
+    },
+    "power_factor": {
+      "before_correction": 0.82,
+      "after_correction": 0.95,
+      "reduction_in_kvar": 180
+    },
+    "short_circuit": {
+      "context": "Available short circuit current at MCC main bus",
+      "mcc_bus": {
+        "symmetrical_ka": 25.5,
+        "asymmetrical_ka": 31.2
+      }
+    },
+    "breaker_spec": {
+      "type": "Molded Case Circuit Breaker",
+      "kv_class": 0.48,
+      "continuous_a": 3000,
+      "interrupting_ka": 65,
+      "interrupting_ka_range": "65",
+      "k_factor": 1.0
+    }
+  }
+}
