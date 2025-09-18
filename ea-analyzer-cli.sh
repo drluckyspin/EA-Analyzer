@@ -113,6 +113,7 @@ show_help() {
     echo -e "${GREEN}    check${WHITE}               Check prerequisites and system status${NC}"
     echo -e "${GREEN}    summary${WHITE}             Show diagram summary from JSON file${NC}"
     echo -e "${GREEN}    store${WHITE}               Store diagram in Neo4j database${NC}"
+    echo -e "${GREEN}    analyze${WHITE}             Analyze electrical diagram image using LLM${NC}"
     echo -e "${GREEN}    neo4j${WHITE}               Neo4j database operations (use 'neo4j --help')${NC}"
     echo -e "${GREEN}    examples${WHITE}            Run example queries${NC}"
     echo -e "${GREEN}    demo${WHITE}                Run complete demo${NC}"
@@ -133,6 +134,8 @@ show_help() {
     print_color $WHITE "    $0 check"
     print_color $WHITE "    $0 summary"
     print_color $WHITE "    $0 store"
+    print_color $WHITE "    $0 analyze substation.png"
+    print_color $WHITE "    $0 analyze substation.png --output custom.json --store"
     print_color $WHITE "    $0 neo4j summary"
     print_color $WHITE "    $0 neo4j protection-schemes"
     print_color $WHITE "    $0 neo4j query \"MATCH (n:Transformer) RETURN n.name\""
@@ -147,6 +150,20 @@ show_help() {
     echo -e "${CYAN}    NEO4J_USERNAME${WHITE}      Neo4j username${NC}"
     echo -e "${CYAN}    NEO4J_PASSWORD${WHITE}      Neo4j password${NC}"
     echo -e "${CYAN}    NEO4J_DATABASE${WHITE}      Neo4j database name${NC}"
+    echo -e "${CYAN}    LLM_PROVIDER${WHITE}        LLM provider (openai, anthropic, gemini)${NC}"
+    echo -e "${CYAN}    LLM_MODEL${WHITE}           LLM model name${NC}"
+    echo -e "${CYAN}    OPENAI_API_KEY${WHITE}      OpenAI API key${NC}"
+    echo -e "${CYAN}    ANTHROPIC_API_KEY${WHITE}   Anthropic API key${NC}"
+    echo -e "${CYAN}    GOOGLE_API_KEY${WHITE}      Google API key${NC}"
+    echo
+    echo
+    print_color $YELLOW "QUICK START:"
+    print_color $WHITE "    $0 check                    # Check required tools and system status"
+    print_color $WHITE "    $0 analyze substation.png   # Analyze electrical diagram with LLM"
+    print_color $WHITE "    $0 analyze substation.png --store  # Analyze and store in Neo4j"
+    print_color $WHITE "    $0 neo4j list               # View stored diagrams"
+    print_color $WHITE "    $0 neo4j export 1           # Export diagram to PNG"
+    print_color $WHITE "    $0 demo                     # Run complete demo"
     echo
     echo
     print_color $YELLOW "For more detailed help on specific commands:"

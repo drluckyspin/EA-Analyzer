@@ -47,6 +47,19 @@ NEO4J_HTTP_PORT=7474
 NEO4J_BOLT_PORT=7687
 ```
 
+### LLM Configuration
+
+```bash
+# LLM Provider API Keys (set only the one you use)
+OPENAI_API_KEY=your_openai_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
+
+# LLM Provider Settings
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
+```
+
 ### Output Configuration
 
 ```bash
@@ -142,6 +155,30 @@ EXAMPLE_QUERIES="MATCH (n) RETURN n LIMIT 5;MATCH (n)-[r]->(m) RETURN n, r, m LI
 ./ea-analyzer-cli.sh examples
 ```
 
+### LLM Image Analysis
+
+```bash
+# .env file with OpenAI configuration
+OPENAI_API_KEY=sk-proj-your-actual-api-key-here
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
+
+# Analyze electrical diagram images
+./ea-analyzer-cli.sh analyze substation.png
+```
+
+### Multiple LLM Providers
+
+```bash
+# .env file with multiple providers
+OPENAI_API_KEY=sk-proj-your-openai-key
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
+GOOGLE_API_KEY=your-google-api-key
+
+# Use specific provider
+./ea-analyzer-cli.sh analyze substation.png --provider anthropic --model claude-3-5-sonnet-20241022
+```
+
 ## Environment-Specific Configuration
 
 ### Development
@@ -151,6 +188,11 @@ EXAMPLE_QUERIES="MATCH (n) RETURN n LIMIT 5;MATCH (n)-[r]->(m) RETURN n, r, m LI
 NEO4J_URI=bolt://localhost:7687
 NEO4J_PASSWORD=dev_password
 VERBOSE_OUTPUT=true
+
+# LLM Configuration for development
+OPENAI_API_KEY=sk-proj-dev-key-here
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
 ```
 
 ### Production
@@ -161,6 +203,11 @@ NEO4J_URI=bolt://prod-neo4j:7687
 NEO4J_USERNAME=prod_user
 NEO4J_PASSWORD=secure_prod_password
 NEO4J_DATABASE=production
+
+# LLM Configuration for production
+OPENAI_API_KEY=sk-proj-prod-key-here
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o
 ```
 
 ### Testing
@@ -170,6 +217,64 @@ NEO4J_DATABASE=production
 NEO4J_URI=bolt://localhost:7687
 NEO4J_DATABASE=test
 NEO4J_PASSWORD=test_password
+
+# LLM Configuration for testing (optional)
+# OPENAI_API_KEY=sk-proj-test-key-here
+# LLM_PROVIDER=openai
+# LLM_MODEL=gpt-4o-mini
+```
+
+## LLM Configuration Details
+
+### Supported Providers
+
+| Provider  | Environment Variable | Default Model                | Description                                  |
+| --------- | -------------------- | ---------------------------- | -------------------------------------------- |
+| OpenAI    | `OPENAI_API_KEY`     | `gpt-4o-mini`                | GPT-4o, GPT-4o-mini, and other vision models |
+| Anthropic | `ANTHROPIC_API_KEY`  | `claude-3-5-sonnet-20241022` | Claude 3.5 Sonnet, Claude 3 Opus             |
+| Google    | `GOOGLE_API_KEY`     | `gemini-2.0-flash-exp`       | Gemini 2.0, Gemini 1.5 Pro                   |
+
+### Model Configuration
+
+```bash
+# Set default provider and model
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
+
+# Override via command line
+./ea-analyzer-cli.sh analyze image.png --provider anthropic --model claude-3-5-sonnet-20241022
+```
+
+### API Key Management
+
+```bash
+# Single provider setup
+OPENAI_API_KEY=sk-proj-your-key-here
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
+
+# Multiple providers setup
+OPENAI_API_KEY=sk-proj-your-openai-key
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
+GOOGLE_API_KEY=your-google-api-key
+
+# Use any provider
+./ea-analyzer-cli.sh analyze image.png --provider anthropic
+```
+
+### Security Best Practices
+
+```bash
+# Restrict API key file permissions
+chmod 600 .env
+
+# Use environment-specific files
+cp .env.example .env.production
+# Edit .env.production with production keys
+
+# Never commit API keys to version control
+echo ".env" >> .gitignore
+echo ".env.*" >> .gitignore
 ```
 
 ## Integration Points
@@ -261,10 +366,34 @@ echo ".env.*.local" >> .gitignore
    ```
 
 3. **Python Not Loading Variables**
+
    ```python
    # Ensure env_config.py is imported
    from ea_analyzer.env_config import load_env_file
    load_env_file()
+   ```
+
+4. **LLM API Key Issues**
+
+   ```bash
+   # Check API key is set
+   echo $OPENAI_API_KEY
+
+   # Test LLM configuration
+   ./ea-analyzer-cli.sh analyze --help
+
+   # Check specific provider
+   ./ea-analyzer-cli.sh analyze image.png --provider openai --api-key your-key
+   ```
+
+5. **LLM Provider Not Found**
+
+   ```bash
+   # Check provider name (case-sensitive)
+   LLM_PROVIDER=openai  # not OpenAI
+
+   # Check model name
+   LLM_MODEL=gpt-4o-mini  # not gpt-4o-mini-vision
    ```
 
 ### Debug Mode
@@ -285,5 +414,45 @@ echo "VERBOSE_OUTPUT=true" >> .env
 4. **Validate Input**: Check variable values in scripts
 5. **Environment Separation**: Use different files for different environments
 6. **Security First**: Never commit sensitive data to version control
+7. **LLM API Key Security**:
+   - Use different API keys for different environments
+   - Monitor API usage and costs
+   - Rotate keys regularly
+   - Use least-privilege access
+8. **Provider Selection**: Choose the most cost-effective provider for your use case
+9. **Model Selection**: Use appropriate models for your accuracy vs. cost requirements
+10. **Error Handling**: Implement proper error handling for API failures and rate limits
 
-This environment configuration system provides a flexible, secure, and maintainable way to manage all aspects of the EA-Analyzer project configuration.
+## Complete .env Template
+
+```bash
+# EA-Analyzer Environment Configuration
+# Copy this file to .env and update with your actual values
+
+# Data file path
+DATA_FILE=data/one-line-knowledge-graph.json
+
+# Neo4j Configuration
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=password
+NEO4J_DATABASE=neo4j
+
+# LLM Provider API Keys (set only the one you use)
+OPENAI_API_KEY=your_openai_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
+
+# LLM Configuration
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
+
+# Display Configuration
+USE_COLORS=true
+VERBOSE_OUTPUT=false
+
+# Example Queries (optional)
+EXAMPLE_QUERIES="MATCH (n:Transformer) RETURN n.name;MATCH (b:Breaker) RETURN b.id, b.name"
+```
+
+This environment configuration system provides a flexible, secure, and maintainable way to manage all aspects of the EA-Analyzer project configuration, including the new LLM integration features.

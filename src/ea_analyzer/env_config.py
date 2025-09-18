@@ -61,6 +61,12 @@ def get_config() -> dict[str, str]:
         "neo4j_database": os.getenv("NEO4J_DATABASE", "neo4j"),
         "use_colors": os.getenv("USE_COLORS", "true").lower() == "true",
         "verbose_output": os.getenv("VERBOSE_OUTPUT", "false").lower() == "true",
+        # LLM Configuration
+        "llm_provider": os.getenv("LLM_PROVIDER", "openai"),
+        "llm_model": os.getenv("LLM_MODEL", "gpt-4o-mini"),
+        "openai_api_key": os.getenv("OPENAI_API_KEY"),
+        "anthropic_api_key": os.getenv("ANTHROPIC_API_KEY"),
+        "google_api_key": os.getenv("GOOGLE_API_KEY"),
     }
 
 

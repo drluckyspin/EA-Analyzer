@@ -17,6 +17,7 @@ from .env_config import get_config
 from .neo4j_client import Neo4jClient
 from .parser import ElectricalDiagramParser
 from .graph_visualizer import ElectricalGraphVisualizer
+from .llm_analyzer import create_analyzer
 
 # Initialize Typer app and Rich console
 app = typer.Typer(
@@ -855,6 +856,165 @@ def examples():
         except Exception as e:
             console.print(f"[red]✗[/red] Error executing query: {e}")
         console.print()
+
+
+@app.command()
+def analyze(
+    image_path: Path = typer.Argument(..., help="Path to electrical diagram image"),
+    output_file: Optional[Path] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Output JSON file path (defaults to image name with .json extension)",
+    ),
+    provider: str = typer.Option(
+        None,
+        "--provider",
+        help="LLM provider (openai, anthropic, gemini) - uses config if not specified",
+    ),
+    model: str = typer.Option(
+        None, "--model", help="LLM model name - uses config if not specified"
+    ),
+    api_key: Optional[str] = typer.Option(
+        None,
+        "--api-key",
+        help="API key for the LLM provider - uses environment variable if not specified",
+    ),
+    store_after: bool = typer.Option(
+        False, "--store", help="Store the analyzed diagram in Neo4j after analysis"
+    ),
+):
+    """Analyze an electrical diagram image using LLM and extract structured data."""
+    if not image_path.exists():
+        console.print(f"[red]✗[/red] Image file not found: {image_path}")
+        raise typer.Exit(1)
+
+    # Get configuration
+    config = get_config()
+
+    # Use provided values or fall back to config
+    llm_provider = provider or config["llm_provider"]
+    llm_model = model or config["llm_model"]
+    llm_api_key = api_key or config.get(f"{llm_provider}_api_key")
+
+    if not llm_api_key:
+        console.print(f"[red]✗[/red] No API key found for provider '{llm_provider}'")
+        console.print(
+            f"[yellow]ℹ[/yellow] Please set {llm_provider.upper()}_API_KEY environment variable"
+        )
+        console.print(f"[yellow]ℹ[/yellow] Or use --api-key option")
+        raise typer.Exit(1)
+
+    # Set output file if not provided
+    if not output_file:
+        output_file = image_path.with_suffix(".json")
+
+    console.print(Panel("LLM Image Analysis", style="blue"))
+    console.print(f"[cyan]ℹ[/cyan] Image: {image_path}")
+    console.print(f"[cyan]ℹ[/cyan] Provider: {llm_provider}")
+    console.print(f"[cyan]ℹ[/cyan] Model: {llm_model}")
+    console.print(f"[cyan]ℹ[/cyan] Output: {output_file}")
+
+    try:
+        # Create analyzer
+        analyzer = create_analyzer(
+            provider=llm_provider, model=llm_model, api_key=llm_api_key
+        )
+
+        # Analyze image
+        console.print("[yellow]Analyzing image with LLM...[/yellow]")
+        diagram = analyzer.analyze_image(image_path)
+        console.print("[green]✓[/green] Image analysis completed successfully!")
+
+        # Save to JSON file
+        console.print(f"[yellow]Saving results to {output_file}...[/yellow]")
+        with open(output_file, "w") as f:
+            json.dump(diagram.model_dump(), f, indent=2)
+        console.print(f"[green]✓[/green] Results saved to {output_file}")
+
+        # Show summary
+        summary_data = {
+            "total_nodes": len(diagram.nodes),
+            "total_edges": len(diagram.edges),
+            "has_calculations": diagram.calculations is not None,
+            "node_counts": {},
+            "edge_counts": {},
+        }
+
+        # Count nodes by type
+        for node in diagram.nodes:
+            node_type = node.type
+            summary_data["node_counts"][node_type] = (
+                summary_data["node_counts"].get(node_type, 0) + 1
+            )
+
+        # Count edges by type
+        for edge in diagram.edges:
+            edge_type = edge.type
+            summary_data["edge_counts"][edge_type] = (
+                summary_data["edge_counts"].get(edge_type, 0) + 1
+            )
+
+        # Display summary
+        stats_table = Table(title="Analysis Results")
+        stats_table.add_column("Metric", style="cyan")
+        stats_table.add_column("Value", style="magenta")
+
+        stats_table.add_row("Total Nodes", str(summary_data["total_nodes"]))
+        stats_table.add_row("Total Edges", str(summary_data["total_edges"]))
+        stats_table.add_row(
+            "Has Calculations", "Yes" if summary_data["has_calculations"] else "No"
+        )
+
+        console.print(stats_table)
+
+        # Display node counts
+        if summary_data["node_counts"]:
+            node_table = Table(title="Node Types")
+            node_table.add_column("Type", style="cyan")
+            node_table.add_column("Count", style="magenta")
+
+            for node_type, count in sorted(summary_data["node_counts"].items()):
+                node_table.add_row(node_type, str(count))
+
+            console.print(node_table)
+
+        # Display edge counts
+        if summary_data["edge_counts"]:
+            edge_table = Table(title="Edge Types")
+            edge_table.add_column("Type", style="cyan")
+            edge_table.add_column("Count", style="magenta")
+
+            for edge_type, count in sorted(summary_data["edge_counts"].items()):
+                edge_table.add_row(edge_type, str(count))
+
+            console.print(edge_table)
+
+        # Store in Neo4j if requested
+        if store_after:
+            console.print("[yellow]Storing diagram in Neo4j...[/yellow]")
+            if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+                console.print("[red]✗[/red] Invalid Neo4j URI")
+                raise typer.Exit(1)
+
+            try:
+                with Neo4jClient(
+                    uri=_global_options["neo4j_uri"],
+                    username=_global_options["neo4j_username"],
+                    password=_global_options["neo4j_password"],
+                    database=_global_options["neo4j_database"],
+                ) as client:
+                    result = client.store_diagram(diagram)
+                    console.print(
+                        f"[green]✓[/green] Diagram stored in Neo4j with ID: {result.get('diagram_id', 'Unknown')}"
+                    )
+            except Exception as e:
+                console.print(f"[red]✗[/red] Error storing in Neo4j: {e}")
+                raise typer.Exit(1)
+
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error analyzing image: {e}")
+        raise typer.Exit(1)
 
 
 @app.command()

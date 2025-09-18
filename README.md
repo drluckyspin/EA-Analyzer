@@ -12,6 +12,7 @@ Electrical Assembly Analyzer is a specialized tool designed to parse electrical 
 
 ### Key Capabilities
 
+- **LLM-Powered Analysis**: Analyze electrical diagram images using AI (OpenAI, Anthropic, Google Gemini)
 - **Structured Data Extraction**: Convert electrical diagrams into machine-readable knowledge graphs
 - **Component Analysis**: Identify and catalog electrical components (transformers, breakers, buses, relays, etc.)
 - **Topology Analysis**: Map electrical connections and relationships between components
@@ -57,37 +58,75 @@ Electrical Assembly Analyzer is a specialized tool designed to parse electrical 
    uv pip install -e .
    ```
 
-3. **Verify installation**:
+3. **Set up environment variables** (for LLM integration):
 
    ```bash
-   ea-parse --help
+   # Create .env file with your API keys
+   cp .env.example .env
+   # Edit .env file with your actual API keys
+   ```
+
+   See [ENV_SETUP.md](ENV_SETUP.md) for detailed environment configuration.
+
+4. **Verify installation**:
+
+   ```bash
+   ./ea-analyzer-cli.sh check
    ```
 
 ### Basic Usage
 
-**Parse and summarize an electrical diagram**:
+**Analyze an electrical diagram image using LLM**:
 
 ```bash
-ea-parse summary data/one-line-knowledge-graph.json
+# Analyze image and extract structured data
+./ea-analyzer-cli.sh analyze substation.png
+
+# Analyze and store in Neo4j
+./ea-analyzer-cli.sh analyze substation.png --store
 ```
 
-**List all components**:
+**Parse and summarize an existing diagram**:
 
 ```bash
-ea-parse list-items data/one-line-knowledge-graph.json
+./ea-analyzer-cli.sh summary data/one-line-knowledge-graph.json
 ```
 
-**Filter by component type**:
+**Store diagram in Neo4j database**:
 
 ```bash
-ea-parse list-items data/one-line-knowledge-graph.json --node-type Transformer
-ea-parse list-items data/one-line-knowledge-graph.json --edge-type CONNECTS_TO
+./ea-analyzer-cli.sh store data/one-line-knowledge-graph.json
 ```
 
-**Parse and save to new file**:
+**Query the database**:
 
 ```bash
-ea-parse parse data/one-line-knowledge-graph.json -o processed_diagram.json
+./ea-analyzer-cli.sh neo4j summary
+./ea-analyzer-cli.sh neo4j protection-schemes
+```
+
+## Quick Start
+
+Get up and running quickly with these essential commands:
+
+```bash
+# Check system status and prerequisites
+./ea-analyzer-cli.sh check
+
+# Analyze an electrical diagram image with LLM
+./ea-analyzer-cli.sh analyze substation.png
+
+# Analyze and store in Neo4j database
+./ea-analyzer-cli.sh analyze substation.png --store
+
+# View stored diagrams
+./ea-analyzer-cli.sh neo4j list
+
+# Export diagram to PNG
+./ea-analyzer-cli.sh neo4j export 1
+
+# Run complete demo
+./ea-analyzer-cli.sh demo
 ```
 
 ## Detailed Usage
@@ -591,6 +630,26 @@ print("Bus 1 connections:")
 for conn in bus_connections:
     other_node = conn.to if conn.from_ == "BUS1" else conn.from_
     print(f"  {other_node} ({conn.type})")
+```
+
+### Example 4: Export Diagram to PNG
+
+```bash
+# Export a stored diagram to PNG
+./ea-analyzer-cli.sh neo4j export 1 --output my_diagram.png
+
+# Export with custom layout and size
+./ea-analyzer-cli.sh neo4j export 1 \
+  --output large_diagram.png \
+  --layout hierarchical \
+  --width 20 \
+  --height 16 \
+  --dpi 300
+
+# Export with spring layout
+./ea-analyzer-cli.sh neo4j export 1 \
+  --output spring_layout.png \
+  --layout spring
 ```
 
 ## Troubleshooting
