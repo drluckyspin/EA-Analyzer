@@ -1,6 +1,7 @@
 """Typer-based CLI for EA-Analyzer with rich output and validation."""
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -15,6 +16,7 @@ from rich import print as rprint
 from .env_config import get_config
 from .neo4j_client import Neo4jClient
 from .parser import ElectricalDiagramParser
+from .graph_visualizer import ElectricalGraphVisualizer
 
 # Initialize Typer app and Rich console
 app = typer.Typer(
@@ -709,6 +711,89 @@ def summary_by_id(
 
     except Exception as e:
         console.print(f"[red]✗[/red] Error getting diagram summary: {e}")
+        raise typer.Exit(1)
+
+
+@neo4j_app.command()
+def export(
+    identifier: str = typer.Argument(
+        ..., help="Diagram index number or diagram ID to export"
+    ),
+    output_file: str = typer.Option(
+        "diagram.png", "--output", "-o", help="Output PNG file path"
+    ),
+    layout: str = typer.Option(
+        "hierarchical",
+        "--layout",
+        "-l",
+        help="Layout algorithm (hierarchical, spring, circular)",
+    ),
+    width: int = typer.Option(16, "--width", "-w", help="Image width in inches"),
+    height: int = typer.Option(12, "--height", "-h", help="Image height in inches"),
+    dpi: int = typer.Option(300, "--dpi", help="Image DPI"),
+):
+    """Export a diagram to PNG file."""
+    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+        raise typer.Exit(1)
+
+    try:
+        with Neo4jClient(
+            uri=_global_options["neo4j_uri"],
+            username=_global_options["neo4j_username"],
+            password=_global_options["neo4j_password"],
+            database=_global_options["neo4j_database"],
+        ) as client:
+            # Resolve identifier to diagram_id
+            diagram_id = client.resolve_diagram_identifier(identifier)
+
+            if not diagram_id:
+                console.print(f"[red]✗[/red] Diagram '{identifier}' not found")
+                console.print(
+                    "[yellow]ℹ[/yellow] Use 'neo4j list' to see available diagrams"
+                )
+                console.print(
+                    "[yellow]ℹ[/yellow] Use index numbers (1, 2, 3...) or full diagram IDs"
+                )
+                raise typer.Exit(1)
+
+            console.print(Panel(f"Exporting Diagram: {identifier}", style="blue"))
+            console.print(f"[cyan]ℹ[/cyan] Diagram ID: {diagram_id}")
+            console.print(f"[cyan]ℹ[/cyan] Output file: {output_file}")
+            console.print(f"[cyan]ℹ[/cyan] Layout: {layout}")
+            console.print(f"[cyan]ℹ[/cyan] Size: {width}x{height} inches at {dpi} DPI")
+
+            # Create visualizer and export
+            visualizer = ElectricalGraphVisualizer(client)
+
+            # Validate layout
+            available_layouts = visualizer.get_available_layouts()
+            if layout not in available_layouts:
+                console.print(f"[red]✗[/red] Invalid layout '{layout}'")
+                console.print(
+                    f"[yellow]ℹ[/yellow] Available layouts: {', '.join(available_layouts)}"
+                )
+                raise typer.Exit(1)
+
+            # Export the diagram
+            output_path = visualizer.export_diagram_to_png(
+                diagram_id=diagram_id,
+                output_path=output_file,
+                layout=layout,
+                figsize=(width, height),
+                dpi=dpi,
+            )
+
+            console.print(
+                f"[green]✓[/green] Successfully exported diagram to: {output_path}"
+            )
+
+            # Show file info
+            if os.path.exists(output_path):
+                file_size = os.path.getsize(output_path)
+                console.print(f"[cyan]ℹ[/cyan] File size: {file_size:,} bytes")
+
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error exporting diagram: {e}")
         raise typer.Exit(1)
 
 

@@ -394,7 +394,6 @@ class Neo4jClient:
                 MATCH (m:Metadata)
                 RETURN m.diagram_id as diagram_id,
                        m.title as title,
-                       m.source as source,
                        m.extracted_at as extracted_at
                 ORDER BY m.extracted_at DESC
                 """
