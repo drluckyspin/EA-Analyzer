@@ -141,6 +141,9 @@ Launch the complete web application with a single command:
 # Build and run the web application (frontend + backend + Neo4j)
 make run-web
 
+# For development with hot reload (recommended for UI work)
+make run-web-dev
+
 # Access the application
 # Frontend:     http://localhost:3000
 # Backend API:  http://localhost:8000
@@ -149,7 +152,18 @@ make run-web
 
 # Stop the web application
 make stop-web
+
+# For development mode
+make stop-web-dev
 ```
+
+**Development Mode Features:**
+
+- **Hot Reload**: Changes to frontend files are reflected immediately
+- **File Mounting**: Local files are mounted into the container
+- **Development Tools**: Full source maps and debugging support
+
+For detailed frontend development instructions, see [FRONTEND_DEVELOPMENT.md](FRONTEND_DEVELOPMENT.md).
 
 ## Detailed Usage
 

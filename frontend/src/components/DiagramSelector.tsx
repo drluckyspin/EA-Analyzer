@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Diagram } from "@/types";
+import { getFormClasses } from "@/lib/theme";
 
 interface DiagramSelectorProps {
   diagrams: Diagram[];
@@ -34,7 +35,7 @@ export const DiagramSelector: React.FC<DiagramSelectorProps> = ({
     <div className="flex items-center space-x-3">
       <label
         htmlFor="diagram-select"
-        className="text-sm font-medium whitespace-nowrap"
+        className={`text-sm font-medium whitespace-nowrap ${getFormClasses.label}`}
       >
         Diagram:
       </label>
@@ -43,10 +44,10 @@ export const DiagramSelector: React.FC<DiagramSelectorProps> = ({
         onValueChange={handleValueChange}
         disabled={loading || diagrams.length === 0}
       >
-        <SelectTrigger className="w-[500px] min-w-[400px]">
+        <SelectTrigger className="w-auto min-w-[600px] max-w-[800px]">
           <SelectValue placeholder="Select a diagram..." />
         </SelectTrigger>
-        <SelectContent className="w-[500px]">
+        <SelectContent className="w-auto min-w-[600px] max-w-[800px]">
           {diagrams.map((diagram) => (
             <SelectItem
               key={diagram.diagram_id}

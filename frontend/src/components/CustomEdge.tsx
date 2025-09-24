@@ -1,7 +1,8 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { EdgeProps, getBezierPath } from '@xyflow/react'
+import React from "react";
+import { EdgeProps, getBezierPath } from "@xyflow/react";
+import { getEdgeTypeColor } from "@/lib/theme";
 
 export const CustomEdge: React.FC<EdgeProps> = ({
   id,
@@ -22,19 +23,10 @@ export const CustomEdge: React.FC<EdgeProps> = ({
     targetX,
     targetY,
     targetPosition,
-  })
+  });
 
-  // Color mapping for different edge types
-  const edgeTypeColors: Record<string, string> = {
-    CONNECTS_TO: '#3b82f6', // blue
-    PROTECTS: '#ef4444', // red
-    CONTROLS: '#10b981', // green
-    MONITORS: '#f59e0b', // yellow
-    SUPPLIES: '#8b5cf6', // purple
-  }
-
-  const edgeType = data?.type || 'CONNECTS_TO'
-  const strokeColor = edgeTypeColors[edgeType as keyof typeof edgeTypeColors] || '#6b7280'
+  const edgeType = (data?.type as string) || "CONNECTS_TO";
+  const strokeColor = getEdgeTypeColor(edgeType);
 
   return (
     <>
@@ -62,5 +54,5 @@ export const CustomEdge: React.FC<EdgeProps> = ({
         </text>
       )}
     </>
-  )
-}
+  );
+};

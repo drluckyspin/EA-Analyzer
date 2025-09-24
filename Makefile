@@ -14,13 +14,14 @@
 # Quick Start:
 #   make check        # Check required tools and dependencies
 #   make dev-install  # Set up development environment
-#   make run-web      # Run the complete web application
+#   make run-web      # Run the complete web application (production)
+#   make run-web-dev  # Run the web application (development with hot reload, foreground)
 #   make test         # Run all tests
 #   make ping         # Test all services
 #
 # For more information, see README.md and CLI_README.md
 
-.PHONY: help build run test clean install dev-install lint format check type-check docs start stop logs ping check_docker check-tools ensure-venv format-check test-watch test-coverage clean-venv really-clean help-test help-dev run-demo check_env run-web stop-web logs-web
+.PHONY: help build run test clean install dev-install lint format check type-check docs start stop logs ping check_docker check-tools ensure-venv format-check test-watch test-coverage clean-venv really-clean help-test help-dev run-demo check_env run-web stop-web logs-web run-web-dev stop-web-dev logs-web-dev run-web-dev-detached
 
 # Default target
 .DEFAULT_GOAL := help
@@ -67,7 +68,8 @@ help: ## Show this help message
 	@echo "  make check        # Check required tools"
 	@echo "  make dev-install  # Install development environment"
 	@echo "  make test         # Run tests"
-	@echo "  make run-web      # Run the web application"
+	@echo "  make run-web      # Run the web application (production)"
+	@echo "  make run-web-dev  # Run the web application (development with hot reload, foreground)"
 	@echo "  make ping         # Test all services"
 
 # Check if Docker is installed
@@ -341,3 +343,51 @@ run-web: check-tools ## Build and run the complete web application (frontend + b
 	@echo "  API Docs:     http://localhost:8000/docs"
 	@echo ""
 	@echo "$(YELLOW)Use 'make stop-web' to stop all services$(NC)"
+
+run-web-dev: check-tools ## Build and run the web application in development mode with hot reload (foreground)
+	@source scripts/log.bash && log_separator
+	@echo "$(BLUE)Building and starting EA-Analyzer Web Application (Development Mode)...$(NC)"
+	@echo "$(YELLOW)Building Docker images for development...$(NC)"
+	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.dev.yml build
+	@echo "$(YELLOW)Starting all services in development mode (foreground)...$(NC)"
+	@echo "$(BLUE)Access URLs:$(NC)"
+	@echo "  Frontend (Hot Reload): http://localhost:3000"
+	@echo "  Backend API:           http://localhost:8000"
+	@echo "  API Docs:              http://localhost:8000/docs"
+	@echo ""
+	@echo "$(YELLOW)Frontend files are mounted for hot reload - changes will be reflected immediately!$(NC)"
+	@echo "$(YELLOW)Press Ctrl+C to stop all services$(NC)"
+	@echo ""
+	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.dev.yml up
+
+stop-web-dev: ## Stop all web application services in development mode
+	@source scripts/log.bash && log_separator
+	@echo "$(BLUE)Stopping web application services (development mode)...$(NC)"
+	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.dev.yml down
+	@echo "$(GREEN)✓ Web application services stopped$(NC)"
+
+run-web-dev-detached: check-tools ## Build and run the web application in development mode (detached)
+	@source scripts/log.bash && log_separator
+	@echo "$(BLUE)Building and starting EA-Analyzer Web Application (Development Mode - Detached)...$(NC)"
+	@echo "$(YELLOW)Building Docker images for development...$(NC)"
+	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.dev.yml build
+	@echo "$(YELLOW)Starting all services in development mode (detached)...$(NC)"
+	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.dev.yml up -d
+	@echo "$(YELLOW)Waiting for services to be ready...$(NC)"
+	@sleep 10
+	@echo "$(GREEN)✓ Web application is running in development mode!$(NC)"
+	@echo ""
+	@echo "$(BLUE)Access URLs:$(NC)"
+	@echo "  Frontend (Hot Reload): http://localhost:3000"
+	@echo "  Backend API:           http://localhost:8000"
+	@echo "  API Docs:              http://localhost:8000/docs"
+	@echo ""
+	@echo "$(YELLOW)Frontend files are mounted for hot reload - changes will be reflected immediately!$(NC)"
+	@echo "$(YELLOW)Use 'make stop-web-dev' to stop all services$(NC)"
+	@echo "$(YELLOW)Use 'make logs-web-dev' to view logs$(NC)"
+
+logs-web-dev: ## Show all web application service logs in development mode
+	@source scripts/log.bash && log_separator
+	@echo "$(BLUE)Web Application Service Logs (Development Mode)$(NC)"
+	@echo "=============================================="
+	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.dev.yml logs -f
