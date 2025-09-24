@@ -400,11 +400,19 @@ class Neo4jClient:
             )
             diagrams = [record.data() for record in result]
 
+            # Deduplicate by diagram_id, keeping the first occurrence (most recent)
+            seen_ids = set()
+            unique_diagrams = []
+            for diagram in diagrams:
+                if diagram["diagram_id"] not in seen_ids:
+                    seen_ids.add(diagram["diagram_id"])
+                    unique_diagrams.append(diagram)
+
             # Add index numbers
-            for i, diagram in enumerate(diagrams, 1):
+            for i, diagram in enumerate(unique_diagrams, 1):
                 diagram["index"] = i
 
-            return diagrams
+            return unique_diagrams
 
     def get_diagram_by_index(self, index: int) -> Optional[Dict[str, Any]]:
         """Get a diagram by its index number.
