@@ -13,6 +13,8 @@ Electrical Assembly Analyzer is a specialized tool designed to parse electrical 
 ### Key Capabilities
 
 - **LLM-Powered Analysis**: Analyze electrical diagram images using AI (OpenAI, Anthropic, Google Gemini)
+- **Web Application**: Modern React-based frontend with FastAPI backend for interactive analysis
+- **Real-time Graph Visualization**: Interactive node-edge graphs using React Flow
 - **Structured Data Extraction**: Convert electrical diagrams into machine-readable knowledge graphs
 - **Component Analysis**: Identify and catalog electrical components (transformers, breakers, buses, relays, etc.)
 - **Topology Analysis**: Map electrical connections and relationships between components
@@ -107,6 +109,8 @@ Electrical Assembly Analyzer is a specialized tool designed to parse electrical 
 
 ## Quick Start
 
+### CLI Usage
+
 Get up and running quickly with these essential commands:
 
 ```bash
@@ -127,6 +131,24 @@ Get up and running quickly with these essential commands:
 
 # Run complete demo
 ./ea-analyzer-cli.sh demo
+```
+
+### Web Application
+
+Launch the complete web application with a single command:
+
+```bash
+# Build and run the web application (frontend + backend + Neo4j)
+make run-web
+
+# Access the application
+# Frontend:     http://localhost:3000
+# Backend API:  http://localhost:8000
+# API Docs:     http://localhost:8000/docs
+# Neo4j:        http://localhost:7474
+
+# Stop the web application
+make stop-web
 ```
 
 ## Detailed Usage

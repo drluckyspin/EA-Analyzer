@@ -11,37 +11,19 @@
   "ontology": {
     "node_types": {
       "GridSource": {
-        "attrs": [
-          "name",
-          "kv",
-          "frequency_hz",
-          "sc_mva",
-          "x_over_r"
-        ]
+        "attrs": ["name", "kv", "frequency_hz", "sc_mva", "x_over_r"]
       },
       "SurgeArrester": {
-        "attrs": [
-          "class",
-          "kv",
-          "location"
-        ]
+        "attrs": ["class", "kv", "location"]
       },
       "PotentialTransformer": {
-        "attrs": [
-          "ratio",
-          "purpose"
-        ]
+        "attrs": ["ratio", "purpose"]
       },
       "CurrentTransformer": {
-        "attrs": [
-          "ratio",
-          "purpose"
-        ]
+        "attrs": ["ratio", "purpose"]
       },
       "Meter": {
-        "attrs": [
-          "purpose"
-        ]
+        "attrs": ["purpose"]
       },
       "Transformer": {
         "attrs": [
@@ -67,60 +49,33 @@
         ]
       },
       "Busbar": {
-        "attrs": [
-          "name",
-          "kv",
-          "ampacity_a"
-        ]
+        "attrs": ["name", "kv", "ampacity_a"]
       },
       "CapacitorBank": {
-        "attrs": [
-          "kvar",
-          "kv_class",
-          "qty"
-        ]
+        "attrs": ["kvar", "kv_class", "qty"]
       },
       "Battery": {
-        "attrs": [
-          "dc_v",
-          "purpose"
-        ]
+        "attrs": ["dc_v", "purpose"]
       },
       "RelayFunction": {
-        "attrs": [
-          "device_code",
-          "description"
-        ]
+        "attrs": ["device_code", "description"]
       },
       "Feeder": {
-        "attrs": [
-          "name",
-          "kv",
-          "load_desc"
-        ]
+        "attrs": ["name", "kv", "load_desc"]
       }
     },
     "edge_types": {
       "CONNECTS_TO": {
-        "attrs": [
-          "via",
-          "notes"
-        ]
+        "attrs": ["via", "notes"]
       },
       "PROTECTS": {
-        "attrs": [
-          "notes"
-        ]
+        "attrs": ["notes"]
       },
       "MEASURES": {
-        "attrs": [
-          "notes"
-        ]
+        "attrs": ["notes"]
       },
       "CONTROLS": {
-        "attrs": [
-          "notes"
-        ]
+        "attrs": ["notes"]
       },
       "POWERED_BY": {
         "attrs": []
@@ -152,6 +107,7 @@
     {
       "id": "SA_A",
       "type": "SurgeArrester",
+      "name": "Surge Arrester A",
       "class": "Station",
       "kv": 115,
       "location": "HV_A"
@@ -159,6 +115,7 @@
     {
       "id": "SA_B",
       "type": "SurgeArrester",
+      "name": "Surge Arrester B",
       "class": "Station",
       "kv": 115,
       "location": "HV_B"
@@ -166,46 +123,48 @@
     {
       "id": "PT_A",
       "type": "PotentialTransformer",
+      "name": "PT A - HV Metering",
       "ratio": null,
       "purpose": "HV metering/protection"
     },
     {
       "id": "CT_A",
       "type": "CurrentTransformer",
+      "name": "CT A - HV Metering",
       "ratio": null,
       "purpose": "HV metering/protection"
     },
     {
       "id": "PT_B",
       "type": "PotentialTransformer",
+      "name": "PT B - HV Metering",
       "ratio": null,
       "purpose": "HV metering/protection"
     },
     {
       "id": "CT_B",
       "type": "CurrentTransformer",
+      "name": "CT B - HV Metering",
       "ratio": null,
       "purpose": "HV metering/protection"
     },
     {
       "id": "MTR_A",
       "type": "Meter",
+      "name": "Utility Meter A",
       "purpose": "Utility metering - left"
     },
     {
       "id": "MTR_B",
       "type": "Meter",
+      "name": "Utility Meter B",
       "purpose": "Utility metering - right"
     },
     {
       "id": "TX1",
       "type": "Transformer",
       "name": "XFMR A",
-      "mva_ratings": [
-        12,
-        16,
-        20
-      ],
+      "mva_ratings": [12, 16, 20],
       "hv_kv": 115,
       "lv_kv": 13.8,
       "vector_group": "Delta\u2013Wye (grounded)",
@@ -217,11 +176,7 @@
       "id": "TX2",
       "type": "Transformer",
       "name": "XFMR B",
-      "mva_ratings": [
-        12,
-        16,
-        20
-      ],
+      "mva_ratings": [12, 16, 20],
       "hv_kv": 115,
       "lv_kv": 13.8,
       "vector_group": "Delta\u2013Wye (grounded)",
@@ -318,6 +273,7 @@
     {
       "id": "CAP1",
       "type": "CapacitorBank",
+      "name": "Capacitor Bank 1",
       "kvar": 3000,
       "kv_class": 13.8,
       "qty": 1
@@ -325,6 +281,7 @@
     {
       "id": "CAP2",
       "type": "CapacitorBank",
+      "name": "Capacitor Bank 2",
       "kvar": 3000,
       "kv_class": 13.8,
       "qty": 1
@@ -332,54 +289,63 @@
     {
       "id": "BAT",
       "type": "Battery",
+      "name": "DC Battery Bank",
       "dc_v": 125,
       "purpose": "Trip and control power for switchgear/relays"
     },
     {
       "id": "R_87T1",
       "type": "RelayFunction",
+      "name": "87T TX1 Diff Relay",
       "device_code": "87T",
       "description": "Transformer differential protection - TX1"
     },
     {
       "id": "R_87T2",
       "type": "RelayFunction",
+      "name": "87T TX2 Diff Relay",
       "device_code": "87T",
       "description": "Transformer differential protection - TX2"
     },
     {
       "id": "R_50_51M1",
       "type": "RelayFunction",
+      "name": "50/51 Main 1 OC Relay",
       "device_code": "50/51",
       "description": "Instantaneous/time overcurrent - Main 1"
     },
     {
       "id": "R_50_51M2",
       "type": "RelayFunction",
+      "name": "50/51 Main 2 OC Relay",
       "device_code": "50/51",
       "description": "Instantaneous/time overcurrent - Main 2"
     },
     {
       "id": "R_27",
       "type": "RelayFunction",
+      "name": "27 Undervoltage Relay",
       "device_code": "27",
       "description": "Undervoltage"
     },
     {
       "id": "R_59",
       "type": "RelayFunction",
+      "name": "59 Overvoltage Relay",
       "device_code": "59",
       "description": "Overvoltage"
     },
     {
       "id": "R_81",
       "type": "RelayFunction",
+      "name": "81 Frequency Relay",
       "device_code": "81",
       "description": "Frequency"
     },
     {
       "id": "R_50_51F",
       "type": "RelayFunction",
+      "name": "50/51 Feeder OC Relay",
       "device_code": "50/51",
       "description": "Feeder overcurrent (typical for all feeders)"
     }
@@ -639,6 +605,54 @@
       "from": "BAT",
       "type": "POWERED_BY",
       "to": "BTIE"
+    },
+    {
+      "from": "MTR_A",
+      "type": "MEASURES",
+      "to": "GS_A",
+      "notes": "utility revenue metering"
+    },
+    {
+      "from": "MTR_B",
+      "type": "MEASURES",
+      "to": "GS_B",
+      "notes": "utility revenue metering"
+    },
+    {
+      "from": "R_50_51F",
+      "type": "PROTECTS",
+      "to": "FDR1",
+      "notes": "feeder overcurrent protection"
+    },
+    {
+      "from": "R_50_51F",
+      "type": "PROTECTS",
+      "to": "FDR2",
+      "notes": "feeder overcurrent protection"
+    },
+    {
+      "from": "R_50_51F",
+      "type": "PROTECTS",
+      "to": "FDR3",
+      "notes": "feeder overcurrent protection"
+    },
+    {
+      "from": "R_50_51F",
+      "type": "PROTECTS",
+      "to": "FDR4",
+      "notes": "feeder overcurrent protection"
+    },
+    {
+      "from": "R_50_51F",
+      "type": "PROTECTS",
+      "to": "FDR5",
+      "notes": "feeder overcurrent protection"
+    },
+    {
+      "from": "R_50_51F",
+      "type": "PROTECTS",
+      "to": "FDR6",
+      "notes": "feeder overcurrent protection"
     }
   ],
   "calculations": {
@@ -652,9 +666,7 @@
         "first_cycle_asym_ka": 12.4,
         "one_point_five_cycles_sym_ka": 7.2
       },
-      "assumptions": [
-        "values taken from the callout in center of drawing"
-      ]
+      "assumptions": ["values taken from the callout in center of drawing"]
     },
     "breaker_spec": {
       "type": "GE VB1 vacuum",

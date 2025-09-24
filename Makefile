@@ -21,7 +21,7 @@
 #
 # For more information, see README.md and CLI_README.md
 
-.PHONY: help build run test clean install dev-install lint format check type-check docs start stop logs ping check_docker check-tools ensure-venv format-check test-watch test-coverage clean-venv really-clean help-test help-dev run-demo check_env
+.PHONY: help build run test clean install dev-install lint format check type-check docs start stop logs ping check_docker check-tools ensure-venv format-check test-watch test-coverage clean-venv really-clean help-test help-dev run-demo check_env run-web stop-web logs-web
 
 # Default target
 .DEFAULT_GOAL := help
@@ -69,6 +69,7 @@ help: ## Show this help message
 	@echo "  make dev-install  # Install development environment"
 	@echo "  make test         # Run tests"
 	@echo "  make run          # Run the CLI tool"
+	@echo "  make run-web      # Run the web application"
 	@echo "  make ping         # Test Neo4j connection"
 
 # Check if Docker is installed
@@ -291,6 +292,12 @@ stop: ## Stop Docker Compose services
 	$(DOCKER_COMPOSE) down
 	@echo "$(GREEN)✓ Services stopped$(NC)"
 
+stop-web: ## Stop all web application services
+	@source scripts/log.bash && log_separator
+	@echo "$(BLUE)Stopping web application services...$(NC)"
+	$(DOCKER_COMPOSE) down
+	@echo "$(GREEN)✓ Web application services stopped$(NC)"
+
 ping: ## Check Neo4j is running
 	@source scripts/log.bash && log_separator
 	@./ea-analyzer-cli.sh neo4j ping
@@ -300,6 +307,12 @@ logs: ## Show service logs
 	@echo "$(BLUE)Service Logs$(NC)"
 	@echo "=============="
 	$(DOCKER_COMPOSE) logs neo4j
+
+logs-web: ## Show all web application service logs
+	@source scripts/log.bash && log_separator
+	@echo "$(BLUE)Web Application Service Logs$(NC)"
+	@echo "=================================="
+	$(DOCKER_COMPOSE) logs -f
 
 
 run-demo: ensure-venv start ## Run complete demo
@@ -312,3 +325,22 @@ run-demo: ensure-venv start ## Run complete demo
 	@echo "$(YELLOW)3. Analyzing protection schemes...$(NC)"
 	./ea-analyzer-cli.sh neo4j protection-schemes
 	@echo "$(GREEN)✓ Demo completed!$(NC)"
+
+run-web: check-tools ## Build and run the complete web application (frontend + backend + Neo4j)
+	@source scripts/log.bash && log_separator
+	@echo "$(BLUE)Building and starting EA-Analyzer Web Application...$(NC)"
+	@echo "$(YELLOW)Building Docker images...$(NC)"
+	$(DOCKER_COMPOSE) build
+	@echo "$(YELLOW)Starting all services...$(NC)"
+	$(DOCKER_COMPOSE) up -d
+	@echo "$(YELLOW)Waiting for services to be ready...$(NC)"
+	@sleep 10
+	@echo "$(GREEN)✓ Web application is running!$(NC)"
+	@echo ""
+	@echo "$(BLUE)Access URLs:$(NC)"
+	@echo "  Frontend:     http://localhost:3000"
+	@echo "  Backend API:  http://localhost:8000"
+	@echo "  API Docs:     http://localhost:8000/docs"
+	@echo "  Neo4j:        http://localhost:7474"
+	@echo ""
+	@echo "$(YELLOW)Use 'make stop-web' to stop all services$(NC)"
