@@ -32,10 +32,21 @@ const nodeTypes: NodeTypes = {
 
 const edgeTypes: EdgeTypes = {
   custom: CustomEdge,
+  // Map all electrical edge types to our custom edge component
+  CONNECTS_TO: CustomEdge,
+  PROTECTS: CustomEdge,
+  MEASURES: CustomEdge,
+  CONTROLS: CustomEdge,
+  POWERED_BY: CustomEdge,
+  LOCATED_ON: CustomEdge,
 };
 
 // Layout algorithm for positioning nodes
-const getLayoutedElements = (nodes: Node[], edges: Edge[], diagramId: string) => {
+const getLayoutedElements = (
+  nodes: Node[],
+  edges: Edge[],
+  diagramId: string
+) => {
   const nodeMap = new Map(nodes.map((node) => [node.id, node]));
   const edgeMap = new Map(edges.map((edge) => [edge.id, edge]));
 
@@ -98,7 +109,13 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], diagramId: string) =>
     };
   });
 
-  return { nodes: positionedNodes, edges };
+  // Process edges to ensure they use the correct React Flow edge type
+  const processedEdges = edges.map((edge) => ({
+    ...edge,
+    type: edge.type || "custom", // Use the edge type from data, fallback to custom
+  }));
+
+  return { nodes: positionedNodes, edges: processedEdges };
 };
 
 export const GraphVisualizer: React.FC = () => {
@@ -150,7 +167,11 @@ export const GraphVisualizer: React.FC = () => {
 
         // Apply layout and set nodes/edges
         const { nodes: layoutedNodes, edges: layoutedEdges } =
-          getLayoutedElements(data.nodes, data.edges, selectedDiagram.diagram_id);
+          getLayoutedElements(
+            data.nodes,
+            data.edges,
+            selectedDiagram.diagram_id
+          );
 
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
@@ -175,19 +196,19 @@ export const GraphVisualizer: React.FC = () => {
   const handleNodesChange = useCallback(
     (changes: any[]) => {
       onNodesChange(changes);
-      
+
       // Check if any changes are position changes
-      const positionChanges = changes.filter(change => 
-        change.type === 'position' && change.position
+      const positionChanges = changes.filter(
+        (change) => change.type === "position" && change.position
       );
-      
+
       if (positionChanges.length > 0 && selectedDiagram) {
         // Get current node positions
         const currentPositions = nodes.reduce((acc, node) => {
           acc[node.id] = { x: node.position.x, y: node.position.y };
           return acc;
         }, {} as Record<string, { x: number; y: number }>);
-        
+
         // Save positions to cookie
         saveNodePositions(selectedDiagram.diagram_id, currentPositions);
       }
@@ -216,22 +237,19 @@ export const GraphVisualizer: React.FC = () => {
   }
 
   return (
-    <div className="h-screen w-full">
-      {/* Header with diagram selector */}
-      <div className="h-16 border-b bg-background flex items-center px-4">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-semibold">EA Analyzer</h1>
-          <DiagramSelector
-            diagrams={diagrams}
-            selectedDiagram={selectedDiagram}
-            onSelect={handleDiagramSelect}
-            loading={loading}
-          />
-        </div>
+    <div className="h-full w-full flex flex-col">
+      {/* Diagram Selector Bar */}
+      <div className="h-16 border-b bg-white flex items-center px-6">
+        <DiagramSelector
+          diagrams={diagrams}
+          selectedDiagram={selectedDiagram}
+          onSelect={handleDiagramSelect}
+          loading={loading}
+        />
       </div>
 
       {/* React Flow canvas */}
-      <div className="h-[calc(100vh-4rem)]">
+      <div className="flex-1">
         <ReactFlow
           nodes={nodes}
           edges={edges}

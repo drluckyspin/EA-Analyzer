@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { GraphVisualizer } from '@/components/GraphVisualizer'
+import { MainLayout } from "@/components/MainLayout";
 
 export default function Home() {
-  return <GraphVisualizer />
+  return <MainLayout />;
 }
