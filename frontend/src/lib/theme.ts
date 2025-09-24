@@ -193,40 +193,9 @@ export const formColors = {
  * Get Tailwind CSS classes for a node type
  */
 export const getNodeTypeClasses = (nodeType: string): string => {
-  switch (nodeType) {
-    case 'GridSource':
-      return 'bg-slate-100 border-slate-300 text-slate-800';
-    case 'Transformer':
-      return 'bg-slate-200 border-slate-400 text-slate-800';
-    case 'Breaker':
-      return 'bg-slate-300 border-slate-500 text-slate-800';
-    case 'Busbar':
-      return 'bg-slate-400 border-slate-600 text-slate-100';
-    case 'Motor':
-      return 'bg-slate-500 border-slate-700 text-slate-100';
-    case 'RelayFunction':
-      return 'bg-slate-600 border-slate-800 text-slate-100';
-    case 'Feeder':
-      return 'bg-slate-700 border-slate-900 text-slate-100';
-    case 'CapacitorBank':
-      return 'bg-slate-800 border-slate-900 text-slate-100';
-    case 'Battery':
-      return 'bg-slate-900 border-slate-900 text-slate-100';
-    case 'Load':
-      return 'bg-slate-50 border-slate-200 text-slate-800';
-    case 'CurrentTransformer':
-      return 'bg-slate-100 border-slate-300 text-slate-800';
-    case 'Meter':
-      return 'bg-slate-200 border-slate-400 text-slate-800';
-    case 'PotentialTransformer':
-      return 'bg-slate-100 border-slate-300 text-slate-800';
-    case 'SurgeArrester':
-      return 'bg-slate-300 border-slate-500 text-slate-800';
-    case 'VB1_vacuum':
-      return 'bg-slate-300 border-slate-500 text-slate-800';
-    default:
-      return 'bg-gray-100 border-gray-300 text-gray-800';
-  }
+  const defaultColors = { background: 'gray-100', border: 'gray-300', text: 'gray-800' };
+  const colors = (nodeTypeColors as any)[nodeType] || defaultColors;
+  return `bg-${colors.background} border-${colors.border} text-${colors.text}`;
 };
 
 /**
