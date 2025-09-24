@@ -14,7 +14,7 @@ from rich.table import Table
 from rich import print as rprint
 
 from .env_config import get_config
-from .neo4j_client import Neo4jClient
+from .database import DatabaseFactory
 from .parser import ElectricalDiagramParser
 from .graph_visualizer import ElectricalGraphVisualizer
 from .llm_analyzer import create_analyzer
@@ -22,7 +22,7 @@ from .llm_analyzer import create_analyzer
 # Initialize Typer app and Rich console
 app = typer.Typer(
     name="ea-analyzer",
-    help="Electrical Assembly Analyzer with Neo4j integration",
+    help="Electrical Assembly Analyzer with database integration",
     no_args_is_help=True,
     rich_markup_mode="rich",
 )
@@ -37,35 +37,39 @@ def main(
     data_file: Optional[Path] = typer.Option(
         None, "--data-file", "-f", help="Path to JSON data file", envvar="DATA_FILE"
     ),
-    neo4j_uri: str = typer.Option(
+    db_type: str = typer.Option(
+        "neo4j", "--db-type", help="Database type (neo4j, postgres, etc.)", envvar="DB_TYPE"
+    ),
+    db_uri: str = typer.Option(
         "bolt://localhost:7687",
-        "--neo4j-uri",
-        help="Neo4j connection URI (defaults to Docker Compose Neo4j)",
-        envvar="NEO4J_URI",
+        "--db-uri",
+        help="Database connection URI (defaults to Docker Compose Neo4j)",
+        envvar="DB_URI",
     ),
-    neo4j_username: str = typer.Option(
-        "neo4j", "--neo4j-user", help="Neo4j username", envvar="NEO4J_USERNAME"
+    db_username: str = typer.Option(
+        "neo4j", "--db-user", help="Database username", envvar="DB_USERNAME"
     ),
-    neo4j_password: str = typer.Option(
-        "password", "--neo4j-pass", help="Neo4j password", envvar="NEO4J_PASSWORD"
+    db_password: str = typer.Option(
+        "password", "--db-pass", help="Database password", envvar="DB_PASSWORD"
     ),
-    neo4j_database: str = typer.Option(
-        "neo4j", "--neo4j-db", help="Neo4j database name", envvar="NEO4J_DATABASE"
+    db_database: str = typer.Option(
+        "neo4j", "--db-name", help="Database name", envvar="DB_DATABASE"
     ),
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose output"
     ),
 ):
-    """EA-Analyzer - Electrical diagram parsing and knowledge graph extraction with Neo4j via Docker Compose."""
+    """EA-Analyzer - Electrical diagram parsing and knowledge graph extraction with database integration."""
     # Store global options
     global _global_options
     _global_options.update(
         {
             "data_file": data_file,
-            "neo4j_uri": neo4j_uri,
-            "neo4j_username": neo4j_username,
-            "neo4j_password": neo4j_password,
-            "neo4j_database": neo4j_database,
+            "db_type": db_type,
+            "db_uri": db_uri,
+            "db_username": db_username,
+            "db_password": db_password,
+            "db_database": db_database,
             "verbose": verbose,
         }
     )
@@ -108,20 +112,21 @@ def validate_data_file(file_path: Path) -> bool:
     return True
 
 
-def validate_neo4j_uri(uri: str) -> bool:
-    """Validate Neo4j URI format."""
+def validate_db_uri(uri: str, db_type: str = "neo4j") -> bool:
+    """Validate database URI format."""
     if not uri:
-        console.print("[red]✗[/red] Neo4j URI cannot be empty")
+        console.print("[red]✗[/red] Database URI cannot be empty")
         return False
 
-    if not (uri.startswith("bolt://") or uri.startswith("neo4j://")):
-        console.print(f"[red]✗[/red] Invalid Neo4j URI format: {uri}")
-        console.print(
-            "[yellow]ℹ[/yellow] Expected format: bolt://hostname:port or neo4j://hostname:port"
-        )
-        console.print("[yellow]ℹ[/yellow] Example: bolt://localhost:7687")
-        return False
-
+    if db_type.lower() == "neo4j":
+        if not (uri.startswith("bolt://") or uri.startswith("neo4j://")):
+            console.print(f"[red]✗[/red] Invalid Neo4j URI format: {uri}")
+            console.print(
+                "[yellow]ℹ[/yellow] Expected format: bolt://hostname:port or neo4j://hostname:port"
+            )
+            console.print("[yellow]ℹ[/yellow] Example: bolt://localhost:7687")
+            return False
+    # Add validation for other database types as needed
     return True
 
 
@@ -161,7 +166,11 @@ def check():
 @app.command()
 def summary(input_file: Optional[Path] = typer.Argument(None, help="Input JSON file")):
     """Show diagram summary from JSON file."""
-    data_file = input_file or get_data_file()
+    # Handle the case where input_file might be a Typer ArgumentInfo object
+    if input_file is not None and hasattr(input_file, '__class__') and 'ArgumentInfo' in str(input_file.__class__):
+        data_file = get_data_file()
+    else:
+        data_file = Path(input_file) if input_file is not None else get_data_file()
 
     if not validate_data_file(data_file):
         raise typer.Exit(1)
@@ -235,37 +244,48 @@ def store(
         None, "--diagram-id", help="Custom diagram ID (defaults to title-based ID)"
     ),
 ):
-    """Store diagram in Neo4j database with partitioning support."""
-    data_file = input_file or get_data_file()
+    """Store diagram in database with partitioning support."""
+    # Handle the case where input_file might be a Typer ArgumentInfo object
+    if input_file is not None and hasattr(input_file, '__class__') and 'ArgumentInfo' in str(input_file.__class__):
+        data_file = get_data_file()
+    else:
+        data_file = Path(input_file) if input_file is not None else get_data_file()
 
     if not validate_data_file(data_file):
         raise typer.Exit(1)
 
-    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+    if not validate_db_uri(_global_options["db_uri"], _global_options["db_type"]):
         raise typer.Exit(1)
 
-    console.print(Panel("Storing Diagram in Neo4j", style="blue"))
+    console.print(Panel("Storing Diagram in Database", style="blue"))
     console.print(f"[cyan]ℹ[/cyan] Loading diagram from: {data_file}")
-    console.print(f"[cyan]ℹ[/cyan] Neo4j URI: {_global_options['neo4j_uri']}")
-    console.print(f"[cyan]ℹ[/cyan] Database: {_global_options['neo4j_database']}")
+    console.print(f"[cyan]ℹ[/cyan] Database URI: {_global_options['db_uri']}")
+    console.print(f"[cyan]ℹ[/cyan] Database: {_global_options['db_database']}")
 
     try:
         parser = ElectricalDiagramParser()
         diagram = parser.load_from_file(data_file)
         console.print(f"[green]✓[/green] Successfully loaded diagram from {data_file}")
 
-        with Neo4jClient(
-            uri=_global_options["neo4j_uri"],
-            username=_global_options["neo4j_username"],
-            password=_global_options["neo4j_password"],
-            database=_global_options["neo4j_database"],
-        ) as client:
-            if clear:
+        client = DatabaseFactory.create_client(
+            db_type=_global_options["db_type"],
+            uri=_global_options["db_uri"],
+            username=_global_options["db_username"],
+            password=_global_options["db_password"],
+            database=_global_options["db_database"]
+        )
+        
+        with client:
+            # Handle Typer OptionInfo objects
+            actual_clear = False if hasattr(clear, '__class__') and 'OptionInfo' in str(clear.__class__) else clear
+            actual_diagram_id = None if hasattr(diagram_id, '__class__') and 'OptionInfo' in str(diagram_id.__class__) else diagram_id
+            
+            if actual_clear:
                 console.print("[yellow]Clearing database...[/yellow]")
                 client.clear_database()
 
-            console.print("[yellow]Storing diagram in Neo4j...[/yellow]")
-            result = client.store_diagram(diagram, diagram_id)
+            console.print("[yellow]Storing diagram in database...[/yellow]")
+            result = client.store_diagram(diagram, actual_diagram_id)
 
             # Display results
             result_table = Table(title="Storage Results")
@@ -276,52 +296,55 @@ def store(
                 result_table.add_row(key.replace("_", " ").title(), str(value))
 
             console.print(result_table)
-            console.print(f"[green]✓[/green] Successfully stored diagram in Neo4j!")
+            console.print(f"[green]✓[/green] Successfully stored diagram in database!")
             console.print(
                 f"[cyan]ℹ[/cyan] Diagram ID: {result.get('diagram_id', 'Unknown')}"
             )
-            console.print(f"[cyan]ℹ[/cyan] Use 'neo4j list' to see all stored diagrams")
+            console.print(f"[cyan]ℹ[/cyan] Use 'db list' to see all stored diagrams")
 
     except Exception as e:
         console.print(f"[red]✗[/red] Error storing diagram: {e}")
         raise typer.Exit(1)
 
 
-# Create a separate Typer app for Neo4j commands
-neo4j_app = typer.Typer(
-    name="neo4j", help="Neo4j database operations (via Docker Compose)"
+# Create a separate Typer app for database commands
+db_app = typer.Typer(
+    name="db", help="Database operations"
 )
 
-# Add the neo4j app to the main app
-app.add_typer(neo4j_app, name="neo4j")
+# Add the db app to the main app
+app.add_typer(db_app, name="db")
 
 
-@neo4j_app.command()
+@db_app.command()
 def ping():
-    """Check if Neo4j is running and accessible (via Docker Compose)."""
-    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+    """Check if database is running and accessible."""
+    if not validate_db_uri(_global_options["db_uri"], _global_options["db_type"]):
         raise typer.Exit(1)
 
-    console.print(Panel("Neo4j Connection Test", style="blue"))
+    console.print(Panel("Database Connection Test", style="blue"))
     console.print(
-        f"[cyan]ℹ[/cyan] Testing connection to: {_global_options['neo4j_uri']}"
+        f"[cyan]ℹ[/cyan] Testing connection to: {_global_options['db_uri']}"
     )
-    console.print(f"[cyan]ℹ[/cyan] Database: {_global_options['neo4j_database']}")
+    console.print(f"[cyan]ℹ[/cyan] Database: {_global_options['db_database']}")
 
     try:
-        with Neo4jClient(
-            uri=_global_options["neo4j_uri"],
-            username=_global_options["neo4j_username"],
-            password=_global_options["neo4j_password"],
-            database=_global_options["neo4j_database"],
-        ) as client:
+        client = DatabaseFactory.create_client(
+            db_type=_global_options["db_type"],
+            uri=_global_options["db_uri"],
+            username=_global_options["db_username"],
+            password=_global_options["db_password"],
+            database=_global_options["db_database"]
+        )
+        
+        with client:
             # Try to execute a simple query to test the connection
             result = client.query_diagram("RETURN 1 as test")
 
             if result and len(result) > 0:
-                console.print("[green]✓[/green] Neo4j is running and accessible!")
+                console.print("[green]✓[/green] Database is running and accessible!")
                 console.print(
-                    f"[green]✓[/green] Successfully connected to database: {_global_options['neo4j_database']}"
+                    f"[green]✓[/green] Successfully connected to database: {_global_options['db_database']}"
                 )
 
                 # Get some basic database info
@@ -341,35 +364,38 @@ def ping():
                     pass
             else:
                 console.print(
-                    "[red]✗[/red] Neo4j connection failed - no response to test query"
+                    "[red]✗[/red] Database connection failed - no response to test query"
                 )
                 raise typer.Exit(1)
 
     except Exception as e:
-        console.print(f"[red]✗[/red] Neo4j connection failed: {e}")
+        console.print(f"[red]✗[/red] Database connection failed: {e}")
         console.print("[yellow]ℹ[/yellow] Please check:")
-        console.print("[yellow]ℹ[/yellow]   - Neo4j Docker container is running")
+        console.print("[yellow]ℹ[/yellow]   - Database service is running")
         console.print("[yellow]ℹ[/yellow]   - Connection URI is correct")
         console.print("[yellow]ℹ[/yellow]   - Username and password are correct")
         console.print("[yellow]ℹ[/yellow]   - Database exists")
         raise typer.Exit(1)
 
 
-@neo4j_app.command()
+@db_app.command()
 def summary():
-    """Show summary of data stored in Neo4j (via Docker Compose)."""
-    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+    """Show summary of data stored in database."""
+    if not validate_db_uri(_global_options["db_uri"], _global_options["db_type"]):
         raise typer.Exit(1)
 
-    console.print(Panel("Neo4j Database Summary", style="blue"))
+    console.print(Panel("Database Summary", style="blue"))
 
     try:
-        with Neo4jClient(
-            uri=_global_options["neo4j_uri"],
-            username=_global_options["neo4j_username"],
-            password=_global_options["neo4j_password"],
-            database=_global_options["neo4j_database"],
-        ) as client:
+        client = DatabaseFactory.create_client(
+            db_type=_global_options["db_type"],
+            uri=_global_options["db_uri"],
+            username=_global_options["db_username"],
+            password=_global_options["db_password"],
+            database=_global_options["db_database"]
+        )
+        
+        with client:
             summary_data = client.get_diagram_summary()
 
             # Display metadata
@@ -422,25 +448,28 @@ def summary():
                 console.print(rel_table)
 
     except Exception as e:
-        console.print(f"[red]✗[/red] Error connecting to Neo4j: {e}")
+        console.print(f"[red]✗[/red] Error connecting to database: {e}")
         raise typer.Exit(1)
 
 
-@neo4j_app.command()
+@db_app.command()
 def protection_schemes():
-    """Show protection schemes in the diagram (via Docker Compose)."""
-    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+    """Show protection schemes in the diagram."""
+    if not validate_db_uri(_global_options["db_uri"], _global_options["db_type"]):
         raise typer.Exit(1)
 
     console.print(Panel("Protection Schemes Analysis", style="blue"))
 
     try:
-        with Neo4jClient(
-            uri=_global_options["neo4j_uri"],
-            username=_global_options["neo4j_username"],
-            password=_global_options["neo4j_password"],
-            database=_global_options["neo4j_database"],
-        ) as client:
+        client = DatabaseFactory.create_client(
+            db_type=_global_options["db_type"],
+            uri=_global_options["db_uri"],
+            username=_global_options["db_username"],
+            password=_global_options["db_password"],
+            database=_global_options["db_database"]
+        )
+        
+        with client:
             schemes = client.get_protection_schemes()
 
             if not schemes:
@@ -472,22 +501,25 @@ def protection_schemes():
         raise typer.Exit(1)
 
 
-@neo4j_app.command()
+@db_app.command()
 def query(cypher_query: str = typer.Argument(..., help="Cypher query to execute")):
-    """Execute a custom Cypher query (via Docker Compose)."""
-    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+    """Execute a custom database query."""
+    if not validate_db_uri(_global_options["db_uri"], _global_options["db_type"]):
         raise typer.Exit(1)
 
-    console.print(Panel("Custom Cypher Query", style="blue"))
+    console.print(Panel("Custom Database Query", style="blue"))
     console.print(f"[cyan]ℹ[/cyan] Query: {cypher_query}")
 
     try:
-        with Neo4jClient(
-            uri=_global_options["neo4j_uri"],
-            username=_global_options["neo4j_username"],
-            password=_global_options["neo4j_password"],
-            database=_global_options["neo4j_database"],
-        ) as client:
+        client = DatabaseFactory.create_client(
+            db_type=_global_options["db_type"],
+            uri=_global_options["db_uri"],
+            username=_global_options["db_username"],
+            password=_global_options["db_password"],
+            database=_global_options["db_database"]
+        )
+        
+        with client:
             results = client.query_diagram(cypher_query)
 
             if not results:
@@ -505,7 +537,8 @@ def query(cypher_query: str = typer.Argument(..., help="Cypher query to execute"
 
                 for result in results:
                     row = [str(result.get(col, "")) for col in columns]
-                    result_table.add_row(*row)
+                    if row:  # Only add row if it's not empty
+                        result_table.add_row(*row)
 
                 console.print(result_table)
 
@@ -514,19 +547,22 @@ def query(cypher_query: str = typer.Argument(..., help="Cypher query to execute"
         raise typer.Exit(1)
 
 
-@neo4j_app.command()
-def list():
+@db_app.command()
+def list_diagrams():
     """List all stored diagrams."""
-    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+    if not validate_db_uri(_global_options["db_uri"], _global_options["db_type"]):
         raise typer.Exit(1)
 
     try:
-        with Neo4jClient(
-            uri=_global_options["neo4j_uri"],
-            username=_global_options["neo4j_username"],
-            password=_global_options["neo4j_password"],
-            database=_global_options["neo4j_database"],
-        ) as client:
+        client = DatabaseFactory.create_client(
+            db_type=_global_options["db_type"],
+            uri=_global_options["db_uri"],
+            username=_global_options["db_username"],
+            password=_global_options["db_password"],
+            database=_global_options["db_database"]
+        )
+        
+        with client:
             console.print(Panel("Stored Diagrams", style="blue"))
 
             diagrams = client.list_diagrams()
@@ -563,7 +599,7 @@ def list():
         raise typer.Exit(1)
 
 
-@neo4j_app.command()
+@db_app.command()
 def delete(
     identifier: str = typer.Argument(
         ..., help="Diagram index number or diagram ID to delete"
@@ -571,16 +607,19 @@ def delete(
     confirm: bool = typer.Option(False, "--confirm", help="Skip confirmation prompt"),
 ):
     """Delete a specific diagram and all its data."""
-    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+    if not validate_db_uri(_global_options["db_uri"], _global_options["db_type"]):
         raise typer.Exit(1)
 
     try:
-        with Neo4jClient(
-            uri=_global_options["neo4j_uri"],
-            username=_global_options["neo4j_username"],
-            password=_global_options["neo4j_password"],
-            database=_global_options["neo4j_database"],
-        ) as client:
+        client = DatabaseFactory.create_client(
+            db_type=_global_options["db_type"],
+            uri=_global_options["db_uri"],
+            username=_global_options["db_username"],
+            password=_global_options["db_password"],
+            database=_global_options["db_database"]
+        )
+        
+        with client:
             # Resolve identifier to diagram_id
             diagram_id = client.resolve_diagram_identifier(identifier)
 
@@ -626,23 +665,26 @@ def delete(
         raise typer.Exit(1)
 
 
-@neo4j_app.command()
+@db_app.command()
 def summary_by_id(
     identifier: str = typer.Argument(
         ..., help="Diagram index number or diagram ID to summarize"
     ),
 ):
     """Get a summary of a specific diagram."""
-    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+    if not validate_db_uri(_global_options["db_uri"], _global_options["db_type"]):
         raise typer.Exit(1)
 
     try:
-        with Neo4jClient(
-            uri=_global_options["neo4j_uri"],
-            username=_global_options["neo4j_username"],
-            password=_global_options["neo4j_password"],
-            database=_global_options["neo4j_database"],
-        ) as client:
+        client = DatabaseFactory.create_client(
+            db_type=_global_options["db_type"],
+            uri=_global_options["db_uri"],
+            username=_global_options["db_username"],
+            password=_global_options["db_password"],
+            database=_global_options["db_database"]
+        )
+        
+        with client:
             # Resolve identifier to diagram_id
             diagram_id = client.resolve_diagram_identifier(identifier)
 
@@ -715,7 +757,7 @@ def summary_by_id(
         raise typer.Exit(1)
 
 
-@neo4j_app.command()
+@db_app.command()
 def export(
     identifier: str = typer.Argument(
         ..., help="Diagram index number or diagram ID to export"
@@ -734,16 +776,19 @@ def export(
     dpi: int = typer.Option(300, "--dpi", help="Image DPI"),
 ):
     """Export a diagram to PNG file."""
-    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+    if not validate_db_uri(_global_options["db_uri"], _global_options["db_type"]):
         raise typer.Exit(1)
 
     try:
-        with Neo4jClient(
-            uri=_global_options["neo4j_uri"],
-            username=_global_options["neo4j_username"],
-            password=_global_options["neo4j_password"],
-            database=_global_options["neo4j_database"],
-        ) as client:
+        client = DatabaseFactory.create_client(
+            db_type=_global_options["db_type"],
+            uri=_global_options["db_uri"],
+            username=_global_options["db_username"],
+            password=_global_options["db_password"],
+            database=_global_options["db_database"]
+        )
+        
+        with client:
             # Resolve identifier to diagram_id
             diagram_id = client.resolve_diagram_identifier(identifier)
 
@@ -801,7 +846,7 @@ def export(
 @app.command()
 def examples():
     """Run example queries."""
-    if not validate_neo4j_uri(_global_options["neo4j_uri"]):
+    if not validate_db_uri(_global_options["db_uri"], _global_options["db_type"]):
         raise typer.Exit(1)
 
     console.print(Panel("Example Queries", style="blue"))
@@ -827,12 +872,15 @@ def examples():
         console.print(f"[cyan]ℹ[/cyan] Query {i}: {name}")
         # Call the neo4j query command directly
         try:
-            with Neo4jClient(
-                uri=_global_options["neo4j_uri"],
-                username=_global_options["neo4j_username"],
-                password=_global_options["neo4j_password"],
-                database=_global_options["neo4j_database"],
-            ) as client:
+            client = DatabaseFactory.create_client(
+                db_type=_global_options["db_type"],
+                uri=_global_options["db_uri"],
+                username=_global_options["db_username"],
+                password=_global_options["db_password"],
+                database=_global_options["db_database"]
+            )
+            
+            with client:
                 results = client.query_diagram(query)
 
                 if not results:
@@ -850,7 +898,8 @@ def examples():
 
                     for result in results:
                         row = [str(result.get(col, "")) for col in columns]
-                        result_table.add_row(*row)
+                        if row:  # Only add row if it's not empty
+                            result_table.add_row(*row)
 
                     console.print(result_table)
         except Exception as e:
@@ -990,26 +1039,29 @@ def analyze(
 
             console.print(edge_table)
 
-        # Store in Neo4j if requested
+        # Store in database if requested
         if store_after:
-            console.print("[yellow]Storing diagram in Neo4j...[/yellow]")
-            if not validate_neo4j_uri(_global_options["neo4j_uri"]):
-                console.print("[red]✗[/red] Invalid Neo4j URI")
+            console.print("[yellow]Storing diagram in database...[/yellow]")
+            if not validate_db_uri(_global_options["db_uri"], _global_options["db_type"]):
+                console.print("[red]✗[/red] Invalid database URI")
                 raise typer.Exit(1)
 
             try:
-                with Neo4jClient(
-                    uri=_global_options["neo4j_uri"],
-                    username=_global_options["neo4j_username"],
-                    password=_global_options["neo4j_password"],
-                    database=_global_options["neo4j_database"],
-                ) as client:
+                client = DatabaseFactory.create_client(
+                    db_type=_global_options["db_type"],
+                    uri=_global_options["db_uri"],
+                    username=_global_options["db_username"],
+                    password=_global_options["db_password"],
+                    database=_global_options["db_database"]
+                )
+                
+                with client:
                     result = client.store_diagram(diagram)
                     console.print(
-                        f"[green]✓[/green] Diagram stored in Neo4j with ID: {result.get('diagram_id', 'Unknown')}"
+                        f"[green]✓[/green] Diagram stored in database with ID: {result.get('diagram_id', 'Unknown')}"
                     )
             except Exception as e:
-                console.print(f"[red]✗[/red] Error storing in Neo4j: {e}")
+                console.print(f"[red]✗[/red] Error storing in database: {e}")
                 raise typer.Exit(1)
 
     except Exception as e:
@@ -1019,7 +1071,7 @@ def analyze(
 
 @app.command()
 def demo():
-    """Run complete demo (start Neo4j, store data, run examples)."""
+    """Run complete demo (start database, store data, run examples)."""
     console.print(Panel("EA-Analyzer Complete Demo", style="blue"))
 
     # Check prerequisites
@@ -1028,24 +1080,139 @@ def demo():
     # Show original data summary
     summary()
 
-    # Store in Neo4j
+    # Store in database
     store()
 
-    # Show Neo4j summary
-    neo4j_app.get_command("summary")()
+    # Show database summary
+    # Call the db summary function directly
+    if not validate_db_uri(_global_options["db_uri"], _global_options["db_type"]):
+        console.print("[red]✗[/red] Invalid database configuration")
+        return
+    
+    console.print(Panel("Database Summary", style="blue"))
+    
+    try:
+        client = DatabaseFactory.create_client(
+            db_type=_global_options["db_type"],
+            uri=_global_options["db_uri"],
+            username=_global_options["db_username"],
+            password=_global_options["db_password"],
+            database=_global_options["db_database"]
+        )
+        
+        with client:
+            # Get summary data
+            summary_data = client.get_diagram_summary()
+            
+            # Display metadata
+            if summary_data.get("metadata"):
+                metadata = summary_data["metadata"]
+                console.print(
+                    Panel(
+                        f"[bold]Title:[/bold] {metadata.get('title', 'N/A')}\n"
+                        f"[bold]Source:[/bold] {metadata.get('source_image', 'N/A')}\n"
+                        f"[bold]Extracted:[/bold] {metadata.get('extracted_at', 'N/A')}",
+                        title="Diagram Metadata",
+                        style="blue"
+                    )
+                )
+            
+            # Display statistics
+            if summary_data.get("statistics"):
+                stats = summary_data["statistics"]
+                
+                # Main statistics table
+                stats_table = Table(title="Diagram Statistics")
+                stats_table.add_column("Metric", style="cyan")
+                stats_table.add_column("Value", style="magenta")
+                
+                stats_table.add_row("Total Nodes", str(stats.get("total_nodes", 0)))
+                stats_table.add_row("Total Relationships", str(stats.get("total_relationships", 0)))
+                
+                console.print(stats_table)
+                
+                # Node types table
+                if stats.get("node_types"):
+                    node_table = Table(title="Node Types")
+                    node_table.add_column("Type", style="cyan")
+                    node_table.add_column("Count", style="magenta")
+                    
+                    for node_type, count in stats["node_types"].items():
+                        node_table.add_row(node_type, str(count))
+                    
+                    console.print(node_table)
+                
+                # Relationship types table
+                if stats.get("relationship_types"):
+                    rel_table = Table(title="Relationship Types")
+                    rel_table.add_column("Type", style="cyan")
+                    rel_table.add_column("Count", style="magenta")
+                    
+                    for rel_type, count in stats["relationship_types"].items():
+                        rel_table.add_row(rel_type, str(count))
+                    
+                    console.print(rel_table)
+            
+            console.print("[green]✓[/green] Database summary retrieved successfully!")
+            
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error retrieving database summary: {e}")
+        return
 
     # Show protection schemes
-    neo4j_app.get_command("protection_schemes")()
+    console.print(Panel("Protection Schemes Analysis", style="blue"))
+    
+    try:
+        with client:
+            protection_schemes = client.get_protection_schemes()
+            
+            if not protection_schemes:
+                console.print("[yellow]ℹ[/yellow] No protection schemes found in the database")
+                return
+            
+            schemes_table = Table(title="Protection Schemes")
+            schemes_table.add_column("Relay ID", style="cyan")
+            schemes_table.add_column("Device Code", style="green")
+            schemes_table.add_column("Description", style="white")
+            schemes_table.add_column("Protected", style="magenta")
+            schemes_table.add_column("Type", style="blue")
+            schemes_table.add_column("Notes", style="yellow")
+            
+            for scheme in protection_schemes:
+                schemes_table.add_row(
+                    scheme.get("relay_id", "Unknown"),
+                    scheme.get("device_code", "Unknown"),
+                    scheme.get("description", "Unknown"),
+                    scheme.get("protected_name") or scheme.get("protected_id", "Unknown"),
+                    scheme.get("protected_type", "Unknown"),
+                    scheme.get("protection_notes", "") or ""
+                )
+            
+            console.print(schemes_table)
+            console.print("[green]✓[/green] Protection schemes analysis completed!")
+            
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error analyzing protection schemes: {e}")
+        return
 
     # Run example queries
     examples()
 
     console.print("[green]✓[/green] Demo completed successfully!")
     console.print("[cyan]ℹ[/cyan] You can now explore the data using:")
-    console.print("[cyan]ℹ[/cyan]   - Neo4j Browser: http://localhost:7474")
+    console.print("[cyan]ℹ[/cyan]   - Database Browser: http://localhost:7474")
     console.print(
-        "[cyan]ℹ[/cyan]   - CLI commands: ea-analyzer neo4j summary, ea-analyzer neo4j protection-schemes, etc."
+        "[cyan]ℹ[/cyan]   - CLI commands: ea-analyzer db summary, ea-analyzer db protection-schemes, etc."
     )
+
+
+@app.command()
+def neo4j():
+    """Legacy Neo4j command - use 'db' instead."""
+    console.print("[yellow]⚠[/yellow] 'neo4j' command is deprecated. Use 'db' instead.")
+    console.print("[cyan]ℹ[/cyan] Redirecting to 'db' command...")
+    console.print("[cyan]ℹ[/cyan] Use: ea-analyzer db --help")
+    raise typer.Exit(0)
 
 
 if __name__ == "__main__":

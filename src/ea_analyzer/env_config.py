@@ -55,6 +55,13 @@ def get_config() -> dict[str, str]:
 
     return {
         "data_file": os.getenv("DATA_FILE", "data/one-line-knowledge-graph.json"),
+        # Database configuration with backward compatibility
+        "db_type": os.getenv("DB_TYPE", os.getenv("NEO4J_TYPE", "neo4j")),
+        "db_uri": os.getenv("DB_URI", os.getenv("NEO4J_URI", "bolt://localhost:7687")),
+        "db_username": os.getenv("DB_USERNAME", os.getenv("NEO4J_USERNAME", "neo4j")),
+        "db_password": os.getenv("DB_PASSWORD", os.getenv("NEO4J_PASSWORD", "password")),
+        "db_database": os.getenv("DB_DATABASE", os.getenv("NEO4J_DATABASE", "neo4j")),
+        # Legacy Neo4j variables for backward compatibility
         "neo4j_uri": os.getenv("NEO4J_URI", "bolt://localhost:7687"),
         "neo4j_username": os.getenv("NEO4J_USERNAME", "neo4j"),
         "neo4j_password": os.getenv("NEO4J_PASSWORD", "password"),

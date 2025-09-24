@@ -27,7 +27,7 @@ echo -e "${BLUE}Infrastructure Services:${NC}"
 echo -e "  • Neo4j (Graph Database - LOCAL): ${BLUE}http://localhost:7474${NC}"
 
 neo4j_ok=0
-if ./ea-analyzer-cli.sh neo4j ping >/dev/null 2>&1; then
+if ./ea-analyzer-cli.sh db ping >/dev/null 2>&1; then
     echo -e "    ${GREEN}✓${NC} Neo4j is healthy"
     neo4j_ok=1
 else

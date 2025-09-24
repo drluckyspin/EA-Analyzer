@@ -237,6 +237,8 @@ jspm_packages/
 .env.test.local
 .env.production.local
 .env.local
+.env.bak
+.env.new
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
