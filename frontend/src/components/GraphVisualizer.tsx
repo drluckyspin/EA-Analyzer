@@ -47,6 +47,7 @@ const getLayoutedElements = (
   edges: Edge[],
   diagramId: string
 ) => {
+  console.log("getLayoutedElements called with", nodes.length, "nodes");
   const nodeMap = new Map(nodes.map((node) => [node.id, node]));
   const edgeMap = new Map(edges.map((edge) => [edge.id, edge]));
 
@@ -112,7 +113,7 @@ const getLayoutedElements = (
   // Process edges to ensure they use the correct React Flow edge type
   const processedEdges = edges.map((edge) => ({
     ...edge,
-    type: (edge.data && edge.data.type) || edge.type || "custom", // Use the edge type from data, fallback to edge.type, then custom
+    type: String((edge.data && edge.data.type) || edge.type || "custom"), // Use the edge type from data, fallback to edge.type, then custom
   }));
 
   return { nodes: positionedNodes, edges: processedEdges };
@@ -165,6 +166,18 @@ export const GraphVisualizer: React.FC = () => {
         );
         setGraphData(data);
 
+        // Debug: Check input data for duplicates
+        const inputNodeIds = data.nodes.map((node) => node.id);
+        const inputUniqueNodeIds = new Set(inputNodeIds);
+        if (inputNodeIds.length !== inputUniqueNodeIds.size) {
+          console.warn(
+            "Input data has duplicate node IDs:",
+            inputNodeIds.filter(
+              (id, index) => inputNodeIds.indexOf(id) !== index
+            )
+          );
+        }
+
         // Apply layout and set nodes/edges
         const { nodes: layoutedNodes, edges: layoutedEdges } =
           getLayoutedElements(
@@ -173,8 +186,30 @@ export const GraphVisualizer: React.FC = () => {
             selectedDiagram.diagram_id
           );
 
-        setNodes(layoutedNodes);
-        setEdges(layoutedEdges);
+        // Debug: Check for duplicate node IDs
+        const nodeIds = layoutedNodes.map((node) => node.id);
+        const uniqueNodeIds = new Set(nodeIds);
+        if (nodeIds.length !== uniqueNodeIds.size) {
+          console.warn(
+            "Duplicate node IDs detected:",
+            nodeIds.filter((id, index) => nodeIds.indexOf(id) !== index)
+          );
+        }
+
+        // Remove duplicate nodes by ID (keep first occurrence)
+        const uniqueNodes = layoutedNodes.filter(
+          (node, index, self) =>
+            index === self.findIndex((n) => n.id === node.id)
+        );
+
+        // Remove duplicate edges by ID (keep first occurrence)
+        const uniqueEdges = layoutedEdges.filter(
+          (edge, index, self) =>
+            index === self.findIndex((e) => e.id === edge.id)
+        );
+
+        setNodes(uniqueNodes);
+        setEdges(uniqueEdges);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load graph data"
@@ -185,7 +220,7 @@ export const GraphVisualizer: React.FC = () => {
     };
 
     loadGraphData();
-  }, [selectedDiagram, setNodes, setEdges]);
+  }, [selectedDiagram]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -203,17 +238,22 @@ export const GraphVisualizer: React.FC = () => {
       );
 
       if (positionChanges.length > 0 && selectedDiagram) {
-        // Get current node positions
-        const currentPositions = nodes.reduce((acc, node) => {
-          acc[node.id] = { x: node.position.x, y: node.position.y };
-          return acc;
-        }, {} as Record<string, { x: number; y: number }>);
+        // Use a timeout to get the updated node positions after the change
+        setTimeout(() => {
+          setNodes((currentNodes) => {
+            const currentPositions = currentNodes.reduce((acc, node) => {
+              acc[node.id] = { x: node.position.x, y: node.position.y };
+              return acc;
+            }, {} as Record<string, { x: number; y: number }>);
 
-        // Save positions to cookie
-        saveNodePositions(selectedDiagram.diagram_id, currentPositions);
+            // Save positions to cookie
+            saveNodePositions(selectedDiagram.diagram_id, currentPositions);
+            return currentNodes;
+          });
+        }, 0);
       }
     },
-    [onNodesChange, nodes, selectedDiagram]
+    [onNodesChange, selectedDiagram, setNodes]
   );
 
   const handleDiagramSelect = (diagram: Diagram) => {

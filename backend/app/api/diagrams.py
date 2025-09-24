@@ -114,7 +114,7 @@ async def get_diagram_graph(
         nodes_query = f"""
             MATCH (n {{diagram_id: '{diagram_id}'}})
             WHERE NOT n:Metadata AND NOT n:Ontology AND NOT n:Calculations
-            RETURN n.id as id, 
+            RETURN DISTINCT n.id as id, 
                    labels(n)[0] as type, 
                    n.name as name,
                    n as properties
@@ -127,7 +127,7 @@ async def get_diagram_graph(
         logger.info("Querying edges from Neo4j")
         edges_query = f"""
             MATCH (from {{diagram_id: '{diagram_id}'}})-[r]->(to {{diagram_id: '{diagram_id}'}})
-            RETURN from.id as from, 
+            RETURN DISTINCT from.id as from, 
                    to.id as to, 
                    type(r) as type,
                    r as properties

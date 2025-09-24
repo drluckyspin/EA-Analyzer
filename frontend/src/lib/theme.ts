@@ -91,9 +91,9 @@ export const nodeTypeColors = {
     text: 'slate-800',
   },
   Breaker: {
-    background: 'slate-300',
-    border: 'slate-500',
-    text: 'slate-800',
+    background: 'slate-700',
+    border: 'slate-900',
+    text: 'slate-100',
   },
   Busbar: {
     background: 'slate-400',
@@ -151,6 +151,16 @@ export const nodeTypeColors = {
     text: 'slate-800',
   },
   VB1_vacuum: {
+    background: 'slate-700',
+    border: 'slate-900',
+    text: 'slate-100',
+  },
+  'VB1 vacuum': {
+    background: 'slate-700',
+    border: 'slate-900',
+    text: 'slate-100',
+  },
+  'GE VB1 vacuum': {
     background: 'slate-300',
     border: 'slate-500',
     text: 'slate-800',
@@ -170,12 +180,15 @@ export const nodeTypeColors = {
 // They are used directly as color values, not as Tailwind class suffixes
 
 export const edgeTypeColors = {
-  CONNECTS_TO: '#3b82f6', // blue-500
-  PROTECTS: '#ef4444',    // red-500
-  CONTROLS: '#10b981',    // emerald-500
-  MONITORS: '#f59e0b',    // amber-500
-  SUPPLIES: '#8b5cf6',    // violet-500
-  default: '#6b7280',     // gray-500
+  CONNECTS_TO: '#475569', // slate-600
+  PROTECTS: '#ff637e',    // custom pink-red for protection
+  CONTROLS: '#475569',    // slate-600
+  MONITORS: '#64748b',    // slate-500
+  SUPPLIES: '#334155',    // slate-700
+  MEASURES: '#64748b',    // slate-500
+  POWERED_BY: '#475569',  // slate-600
+  LOCATED_ON: '#94a3b8',  // slate-400
+  default: '#64748b',     // slate-500
 } as const;
 
 // ============================================================================
@@ -206,9 +219,44 @@ export const formColors = {
  * Get Tailwind CSS classes for a node type
  */
 export const getNodeTypeClasses = (nodeType: string): string => {
-  const defaultColors = { background: 'gray-100', border: 'gray-300', text: 'gray-800' };
-  const colors = (nodeTypeColors as any)[nodeType] || defaultColors;
-  return `bg-${colors.background} border-${colors.border} text-${colors.text}`;
+  switch (nodeType) {
+    case 'GridSource':
+      return 'bg-slate-100 border-slate-300 text-slate-800';
+    case 'Transformer':
+      return 'bg-slate-200 border-slate-400 text-slate-800';
+    case 'Breaker':
+      return 'bg-slate-300 border-slate-500 text-slate-800';
+    case 'Busbar':
+      return 'bg-slate-400 border-slate-600 text-slate-100';
+    case 'Motor':
+      return 'bg-slate-500 border-slate-700 text-slate-100';
+    case 'RelayFunction':
+      return 'bg-slate-600 border-slate-800 text-slate-100';
+    case 'Feeder':
+      return 'bg-slate-700 border-slate-900 text-slate-100';
+    case 'CapacitorBank':
+      return 'bg-slate-800 border-slate-900 text-slate-100';
+    case 'Battery':
+      return 'bg-slate-900 border-slate-900 text-slate-100';
+    case 'Load':
+      return 'bg-slate-50 border-slate-200 text-slate-800';
+    case 'CurrentTransformer':
+      return 'bg-slate-100 border-slate-300 text-slate-800';
+    case 'Meter':
+      return 'bg-slate-200 border-slate-400 text-slate-800';
+    case 'PotentialTransformer':
+      return 'bg-slate-100 border-slate-300 text-slate-800';
+    case 'SurgeArrester':
+      return 'bg-slate-300 border-slate-500 text-slate-800';
+    case 'VB1_vacuum':
+      return 'bg-slate-300 border-slate-500 text-slate-800';
+    case 'VB1 vacuum':
+      return 'bg-slate-300 border-slate-500 text-slate-800';
+    case 'GE VB1 vacuum':
+      return 'bg-slate-300 border-slate-500 text-slate-800';
+    default:
+      return 'bg-gray-100 border-gray-300 text-gray-800';
+  }
 };
 
 /**

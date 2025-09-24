@@ -42,8 +42,9 @@ export const CustomEdge: React.FC<EdgeProps> = ({
         markerEnd={markerEnd}
       />
       {data?.type && (
-        <text>
+        <text key={`${id}-label`}>
           <textPath
+            key={`${id}-textpath`}
             href={`#${id}`}
             style={{ fontSize: 12, fill: strokeColor }}
             startOffset="50%"

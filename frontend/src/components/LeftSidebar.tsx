@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { Zap, FileText, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSidebarClasses } from "@/lib/theme";
@@ -41,9 +42,11 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         className={`h-32 pt-6 flex items-center justify-center cursor-pointer group`}
       >
         <div className="flex items-center justify-center transition-all duration-300 ease-in-out group-hover:scale-110">
-          <img
+          <Image
             src="/ampy-logo.png"
             alt="AMPY Logo"
+            width={112}
+            height={112}
             className="w-28 h-28 object-contain transition-all duration-300 ease-in-out group-hover:drop-shadow-lg"
           />
         </div>

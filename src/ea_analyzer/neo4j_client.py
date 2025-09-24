@@ -82,10 +82,12 @@ class Neo4jClient:
 
         # Generate diagram_id from metadata if not provided
         if diagram_id is None:
-            diagram_id = diagram.metadata.get("title", "unknown_diagram")
-            # Sanitize diagram_id for Neo4j
-            diagram_id = (
-                diagram_id.lower()
+            import datetime
+
+            base_id = diagram.metadata.get("title", "unknown_diagram")
+            # Sanitize base_id for Neo4j
+            base_id = (
+                base_id.lower()
                 .replace(" ", "_")
                 .replace("-", "_")
                 .replace("(", "")
@@ -93,6 +95,9 @@ class Neo4jClient:
                 .replace("/", "_")
                 .replace("\\", "_")
             )
+            # Add timestamp to make it unique
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            diagram_id = f"{base_id}_{timestamp}"
 
         node_count = 0
         edge_count = 0

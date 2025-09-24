@@ -31,6 +31,46 @@ export const DiagramSelector: React.FC<DiagramSelectorProps> = ({
     }
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const getStorageDate = (diagramId: string) => {
+    // Extract timestamp from diagram_id (format: name_YYYYMMDD_HHMMSS)
+    const parts = diagramId.split("_");
+    if (parts.length >= 3) {
+      const datePart = parts[parts.length - 2]; // YYYYMMDD
+      const timePart = parts[parts.length - 1]; // HHMMSS
+
+      if (datePart.length === 8 && timePart.length === 6) {
+        const year = datePart.substring(0, 4);
+        const month = datePart.substring(4, 6);
+        const day = datePart.substring(6, 8);
+        const hour = timePart.substring(0, 2);
+        const minute = timePart.substring(2, 4);
+        const second = timePart.substring(4, 6);
+
+        const date = new Date(
+          `${year}-${month}-${day}T${hour}:${minute}:${second}`
+        );
+        return formatDate(date.toISOString());
+      }
+    }
+    return "Unknown";
+  };
+
   return (
     <div className="flex items-center space-x-3">
       <label
@@ -59,7 +99,7 @@ export const DiagramSelector: React.FC<DiagramSelectorProps> = ({
                   {diagram.title}
                 </span>
                 <span className="text-xs text-muted-foreground mt-1">
-                  {diagram.extracted_at}
+                  Stored: {getStorageDate(diagram.diagram_id)}
                 </span>
               </div>
             </SelectItem>

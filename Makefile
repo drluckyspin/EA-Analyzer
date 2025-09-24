@@ -299,9 +299,9 @@ run-demo: ensure-venv start ## Run complete demo
 	@echo "$(YELLOW)1. Storing diagram data...$(NC)"
 	./ea-analyzer-cli.sh store "$(DATA_FILE)"
 	@echo "$(YELLOW)2. Showing database summary...$(NC)"
-	./ea-analyzer-cli.sh neo4j summary
+	./ea-analyzer-cli.sh db summary
 	@echo "$(YELLOW)3. Analyzing protection schemes...$(NC)"
-	./ea-analyzer-cli.sh neo4j protection-schemes
+	./ea-analyzer-cli.sh db protection-schemes
 	@echo "$(GREEN)✓ Demo completed!$(NC)"
 
 run: check-tools ## Build and run the complete web application (frontend + backend)
