@@ -112,7 +112,7 @@ const getLayoutedElements = (
   // Process edges to ensure they use the correct React Flow edge type
   const processedEdges = edges.map((edge) => ({
     ...edge,
-    type: edge.type || "custom", // Use the edge type from data, fallback to custom
+    type: (edge.data && edge.data.type) || edge.type || "custom", // Use the edge type from data, fallback to edge.type, then custom
   }));
 
   return { nodes: positionedNodes, edges: processedEdges };
