@@ -8,6 +8,9 @@
 // ============================================================================
 // BRAND COLORS
 // ============================================================================
+// Note: These color values are Tailwind class suffixes (e.g., 'blue-900', 'white')
+// They should be combined with appropriate prefixes (bg-, text-, border-) when used
+// Example: `bg-${brandColors.primary.DEFAULT}` becomes 'bg-blue-900'
 
 export const brandColors = {
   primary: {
@@ -24,6 +27,8 @@ export const brandColors = {
 // ============================================================================
 // NAVIGATION COLORS
 // ============================================================================
+// Note: These color values are Tailwind class suffixes
+// They should be combined with appropriate prefixes (bg-, text-, border-) when used
 
 export const navigationColors = {
   background: 'slate-800',
@@ -42,6 +47,8 @@ export const navigationColors = {
 // ============================================================================
 // SIDEBAR COLORS
 // ============================================================================
+// Note: These color values are Tailwind class suffixes
+// They should be combined with appropriate prefixes (bg-, text-, border-) when used
 
 export const sidebarColors = {
   background: 'slate-800',
@@ -69,6 +76,8 @@ export const sidebarColors = {
 // ============================================================================
 // NODE TYPE COLORS
 // ============================================================================
+// Note: These color values are Tailwind class suffixes
+// They should be combined with appropriate prefixes (bg-, text-, border-) when used
 
 export const nodeTypeColors = {
   GridSource: {
@@ -157,6 +166,8 @@ export const nodeTypeColors = {
 // ============================================================================
 // EDGE TYPE COLORS
 // ============================================================================
+// Note: These are hex color values for React Flow edge styling
+// They are used directly as color values, not as Tailwind class suffixes
 
 export const edgeTypeColors = {
   CONNECTS_TO: '#3b82f6', // blue-500
@@ -170,6 +181,8 @@ export const edgeTypeColors = {
 // ============================================================================
 // FORM COLORS
 // ============================================================================
+// Note: These color values are Tailwind class suffixes
+// They should be combined with appropriate prefixes (bg-, text-, border-) when used
 
 export const formColors = {
   label: {
