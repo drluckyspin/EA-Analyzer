@@ -6,7 +6,7 @@
 #
 # Key Features:
 # - Python package management with uv
-# - Docker Compose integration for Neo4j database
+# - Docker Compose integration for web application
 # - Code quality tools (ruff, mypy)
 # - Testing and coverage reporting
 # - Development environment setup
@@ -14,10 +14,9 @@
 # Quick Start:
 #   make check        # Check required tools and dependencies
 #   make dev-install  # Set up development environment
-#   make start        # Start Neo4j database
-#   make run          # Run the CLI tool with sample data
+#   make run-web      # Run the complete web application
 #   make test         # Run all tests
-#   make ping         # Test Neo4j connection
+#   make ping         # Test all services
 #
 # For more information, see README.md and CLI_README.md
 
@@ -68,9 +67,8 @@ help: ## Show this help message
 	@echo "  make check        # Check required tools"
 	@echo "  make dev-install  # Install development environment"
 	@echo "  make test         # Run tests"
-	@echo "  make run          # Run the CLI tool"
 	@echo "  make run-web      # Run the web application"
-	@echo "  make ping         # Test Neo4j connection"
+	@echo "  make ping         # Test all services"
 
 # Check if Docker is installed
 check_docker:
@@ -156,7 +154,7 @@ build: check-tools ## Build the package
 	@echo "$(GREEN)✓ Package built successfully!$(NC)"
 
 # Running
-run: ensure-venv start ## Run the CLI tool with sample data and Neo4j
+run: ensure-venv start ## Run the CLI tool with sample data
 	@source scripts/log.bash && log_separator
 	@echo "$(BLUE)Running Electrical Assembly Analyzer with Neo4j...$(NC)"
 	@echo "$(YELLOW)Waiting for Neo4j to be ready...$(NC)"
@@ -298,52 +296,9 @@ stop-web: ## Stop all web application services
 	$(DOCKER_COMPOSE) down
 	@echo "$(GREEN)✓ Web application services stopped$(NC)"
 
-ping: ## Check all services are running (Neo4j, Backend, Frontend)
+ping: ## Check all services are running (Backend, Frontend)
 	@source scripts/log.bash && log_separator
-	@echo "$(BLUE)Checking all EA-Analyzer services...$(NC)"
-	@echo ""
-	@neo4j_status=; backend_status=; frontend_status=; \
-	echo "$(YELLOW)1. Checking Neo4j...$(NC)"; \
-	if ./ea-analyzer-cli.sh neo4j ping >/dev/null 2>&1; then \
-		echo "$(GREEN)✓ Neo4j is running$(NC)"; \
-	else \
-		echo "$(RED)✗ Neo4j is not running$(NC)"; \
-		neo4j_status=1; \
-	fi; \
-	echo ""; \
-	echo "$(YELLOW)2. Checking Backend API...$(NC)"; \
-	if curl -s http://localhost:8000/health >/dev/null 2>&1; then \
-		echo "$(GREEN)✓ Backend API is running$(NC)"; \
-		health_status=$$(curl -s http://localhost:8000/health | grep -o '"status":"[^"]*"' | cut -d'"' -f4 2>/dev/null || echo "unknown"); \
-		echo "$(BLUE)  API Health: $$health_status$(NC)"; \
-	else \
-		echo "$(RED)✗ Backend API is not running$(NC)"; \
-		backend_status=1; \
-	fi; \
-	echo ""; \
-	echo "$(YELLOW)3. Checking Frontend...$(NC)"; \
-	if curl -s -I http://localhost:3000 >/dev/null 2>&1; then \
-		echo "$(GREEN)✓ Frontend is running$(NC)"; \
-	else \
-		echo "$(RED)✗ Frontend is not running$(NC)"; \
-		frontend_status=1; \
-	fi; \
-	echo ""; \
-	if [ -z "$$neo4j_status" ] && [ -z "$$backend_status" ] && [ -z "$$frontend_status" ]; then \
-		echo "$(GREEN)✓ All services are running!$(NC)"; \
-		echo ""; \
-		echo "$(BLUE)Access URLs:$(NC)"; \
-		echo "  Frontend:     http://localhost:3000"; \
-		echo "  Backend API:  http://localhost:8000"; \
-		echo "  API Docs:     http://localhost:8000/docs"; \
-		echo "  Neo4j:        http://localhost:7474"; \
-	else \
-		echo "$(RED)✗ Some services are not running$(NC)"; \
-		echo ""; \
-		echo "$(YELLOW)To start all services: make run-web$(NC)"; \
-		echo "$(YELLOW)To start only Neo4j: make start$(NC)"; \
-		exit 1; \
-	fi
+	@./scripts/health-check.sh
 
 logs: ## Show service logs
 	@source scripts/log.bash && log_separator
@@ -369,7 +324,7 @@ run-demo: ensure-venv start ## Run complete demo
 	./ea-analyzer-cli.sh neo4j protection-schemes
 	@echo "$(GREEN)✓ Demo completed!$(NC)"
 
-run-web: check-tools ## Build and run the complete web application (frontend + backend + Neo4j)
+run-web: check-tools ## Build and run the complete web application (frontend + backend)
 	@source scripts/log.bash && log_separator
 	@echo "$(BLUE)Building and starting EA-Analyzer Web Application...$(NC)"
 	@echo "$(YELLOW)Building Docker images...$(NC)"
@@ -384,6 +339,5 @@ run-web: check-tools ## Build and run the complete web application (frontend + b
 	@echo "  Frontend:     http://localhost:3000"
 	@echo "  Backend API:  http://localhost:8000"
 	@echo "  API Docs:     http://localhost:8000/docs"
-	@echo "  Neo4j:        http://localhost:7474"
 	@echo ""
 	@echo "$(YELLOW)Use 'make stop-web' to stop all services$(NC)"
