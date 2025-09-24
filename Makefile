@@ -298,9 +298,51 @@ stop-web: ## Stop all web application services
 	$(DOCKER_COMPOSE) down
 	@echo "$(GREEN)✓ Web application services stopped$(NC)"
 
-ping: ## Check Neo4j is running
+ping: ## Check all services are running (Neo4j, Backend, Frontend)
 	@source scripts/log.bash && log_separator
-	@./ea-analyzer-cli.sh neo4j ping
+	@echo "$(BLUE)Checking all EA-Analyzer services...$(NC)"
+	@echo ""
+	@echo "$(YELLOW)1. Checking Neo4j...$(NC)"
+	@if ./ea-analyzer-cli.sh neo4j ping >/dev/null 2>&1; then \
+		echo "$(GREEN)✓ Neo4j is running$(NC)"; \
+	else \
+		echo "$(RED)✗ Neo4j is not running$(NC)"; \
+		neo4j_status=1; \
+	fi
+	@echo ""
+	@echo "$(YELLOW)2. Checking Backend API...$(NC)"
+	@if curl -s http://localhost:8000/health >/dev/null 2>&1; then \
+		echo "$(GREEN)✓ Backend API is running$(NC)"; \
+		health_status=$$(curl -s http://localhost:8000/health | grep -o '"status":"[^"]*"' | cut -d'"' -f4 2>/dev/null || echo "unknown"); \
+		echo "$(BLUE)  API Health: $$health_status$(NC)"; \
+	else \
+		echo "$(RED)✗ Backend API is not running$(NC)"; \
+		backend_status=1; \
+	fi
+	@echo ""
+	@echo "$(YELLOW)3. Checking Frontend...$(NC)"
+	@if curl -s -I http://localhost:3000 >/dev/null 2>&1; then \
+		echo "$(GREEN)✓ Frontend is running$(NC)"; \
+	else \
+		echo "$(RED)✗ Frontend is not running$(NC)"; \
+		frontend_status=1; \
+	fi
+	@echo ""
+	@if [ -z "$$neo4j_status" ] && [ -z "$$backend_status" ] && [ -z "$$frontend_status" ]; then \
+		echo "$(GREEN)✓ All services are running!$(NC)"; \
+		echo ""; \
+		echo "$(BLUE)Access URLs:$(NC)"; \
+		echo "  Frontend:     http://localhost:3000"; \
+		echo "  Backend API:  http://localhost:8000"; \
+		echo "  API Docs:     http://localhost:8000/docs"; \
+		echo "  Neo4j:        http://localhost:7474"; \
+	else \
+		echo "$(RED)✗ Some services are not running$(NC)"; \
+		echo ""; \
+		echo "$(YELLOW)To start all services: make run-web$(NC)"; \
+		echo "$(YELLOW)To start only Neo4j: make start$(NC)"; \
+		exit 1; \
+	fi
 
 logs: ## Show service logs
 	@source scripts/log.bash && log_separator
