@@ -2,9 +2,7 @@
 name = "ea-analyzer-backend"
 version = "1.0.0"
 description = "FastAPI backend for EA Analyzer web application"
-authors = [
-    {name = "EA Analyzer Team", email = "team@ea-analyzer.com"}
-]
+authors = [{ name = "EA Analyzer Team", email = "team@ea-analyzer.com" }]
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -14,6 +12,11 @@ dependencies = [
     "neo4j==5.14.1",
     "python-multipart==0.0.6",
     "python-dotenv==1.0.0",
+    "openai>=1.0.0",
+    "anthropic>=0.8.0",
+    "google-generativeai>=0.3.0",
+    "pillow>=9.0.0",
+    "pdf2image>=1.16.0",
 ]
 
 [project.optional-dependencies]
@@ -49,9 +52,9 @@ select = [
     "UP", # pyupgrade
 ]
 ignore = [
-    "E501",  # line too long, handled by black
-    "B008",  # do not perform function calls in argument defaults
-    "C901",  # too complex
+    "E501", # line too long, handled by black
+    "B008", # do not perform function calls in argument defaults
+    "C901", # too complex
 ]
 
 [tool.ruff.per-file-ignores]

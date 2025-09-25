@@ -45,6 +45,77 @@ class ApiClient {
     })
   }
 
+  // Upload endpoints
+  async uploadDiagram(file: File): Promise<{
+    upload_id: string;
+    filename: string;
+    file_size: number;
+    file_type: string;
+    message: string;
+  }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${this.baseUrl}/api/diagrams/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `Upload failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async analyzeDiagram(uploadId: string): Promise<{
+    upload_id: string;
+    diagram_data: any;
+    analysis_summary: any;
+    success: boolean;
+    error?: string;
+  }> {
+    const formData = new FormData();
+    formData.append('upload_id', uploadId);
+
+    const response = await fetch(`${this.baseUrl}/api/diagrams/analyze`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `Analysis failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async storeDiagram(uploadId: string, diagramData: any): Promise<{
+    upload_id: string;
+    diagram_id: string;
+    storage_summary: any;
+    success: boolean;
+    error?: string;
+  }> {
+    const formData = new FormData();
+    formData.append('upload_id', uploadId);
+    formData.append('diagram_data', JSON.stringify(diagramData));
+
+    const response = await fetch(`${this.baseUrl}/api/diagrams/store`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `Storage failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
   // Health check
   async healthCheck(): Promise<{ status: string }> {
     return this.request<{ status: string }>('/health')

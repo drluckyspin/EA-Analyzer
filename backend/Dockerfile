@@ -6,6 +6,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     gcc \
     curl \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
@@ -20,7 +21,7 @@ COPY ../backend /app/backend
 WORKDIR /app/backend
 
 # Install dependencies with uv
-RUN uv sync --frozen
+RUN uv sync
 
 # Set Python path
 ENV PYTHONPATH=/app/src:/app/backend

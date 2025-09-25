@@ -23,6 +23,7 @@ import { Diagram, GraphData } from "@/types";
 import { DiagramSelector } from "./DiagramSelector";
 import { CustomNode } from "./CustomNode";
 import { CustomEdge } from "./CustomEdge";
+import { NoSelectionState } from "./NoSelectionState";
 import { saveNodePositions, loadNodePositions } from "@/lib/cookies";
 
 // Define node and edge types
@@ -143,7 +144,7 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
         const diagramsData = await apiClient.getDiagrams();
         setDiagrams(diagramsData);
 
-        // If an initial diagram ID is provided, select it; otherwise auto-select first diagram
+        // If an initial diagram ID is provided, select it; otherwise don't auto-select
         if (
           initialDiagramId &&
           diagramsData.some((d) => d.diagram_id === initialDiagramId)
@@ -154,9 +155,8 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
           if (targetDiagram) {
             setSelectedDiagram(targetDiagram);
           }
-        } else if (diagramsData.length > 0) {
-          setSelectedDiagram(diagramsData[0]);
         }
+        // Removed auto-selection of first diagram - user must select manually
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load diagrams"
@@ -318,21 +318,28 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
 
       {/* React Flow canvas */}
       <div className="flex-1">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={handleNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          fitView
-          attributionPosition="bottom-left"
-        >
-          <Controls />
-          <MiniMap />
-          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-        </ReactFlow>
+        {selectedDiagram ? (
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={handleNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            fitView
+            attributionPosition="bottom-left"
+          >
+            <Controls />
+            <MiniMap />
+            <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+          </ReactFlow>
+        ) : (
+          <NoSelectionState
+            title="No Diagram Selected"
+            description="Please select a diagram from the dropdown above to view its visualization."
+          />
+        )}
       </div>
     </div>
   );

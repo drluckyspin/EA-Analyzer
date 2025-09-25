@@ -4,8 +4,10 @@ import React, { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api";
 import { Diagram } from "@/types";
 import { DiagramSelector } from "./DiagramSelector";
+import { ImageViewerModal } from "./ImageViewerModal";
+import { NoSelectionState } from "./NoSelectionState";
 import { Card } from "./ui/card";
-import { FileText, BarChart3, Network, GitBranch } from "lucide-react";
+import { FileText, BarChart3, Network, GitBranch, Eye } from "lucide-react";
 
 interface DiagramSummary {
   diagram_id: string;
@@ -31,6 +33,17 @@ export const AnalyzePage: React.FC<AnalyzePageProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isContentVisible, setIsContentVisible] = useState(false);
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+  const [imageData, setImageData] = useState<string>("");
+  const [imageFilename, setImageFilename] = useState<string>("");
+
+  const handleViewSourceImage = () => {
+    if (summary?.metadata.original_image) {
+      setImageData(summary.metadata.original_image);
+      setImageFilename(summary.metadata.original_filename || "diagram");
+      setIsImageViewerOpen(true);
+    }
+  };
 
   // Load diagrams on component mount
   useEffect(() => {
@@ -101,7 +114,15 @@ export const AnalyzePage: React.FC<AnalyzePageProps> = ({
 
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleString();
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
     } catch {
       return dateString;
     }
@@ -193,14 +214,18 @@ export const AnalyzePage: React.FC<AnalyzePageProps> = ({
                     </div>
                   </div>
 
-                  {summary.metadata.source_image && (
+                  {summary.metadata.original_image && (
                     <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
                       <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2 block">
                         Source Image
                       </label>
-                      <div className="text-slate-900 font-medium text-sm">
-                        {summary.metadata.source_image}
-                      </div>
+                      <button
+                        onClick={handleViewSourceImage}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                      >
+                        <Eye className="h-3 w-3" />
+                        {summary.metadata.original_filename || "diagram"}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -359,13 +384,20 @@ export const AnalyzePage: React.FC<AnalyzePageProps> = ({
         )}
 
         {!summary && !loading && !error && (
-          <div className="flex items-center justify-center h-32">
-            <div className="text-slate-600">
-              Select a diagram to view analysis
-            </div>
-          </div>
+          <NoSelectionState
+            title="No Diagram Selected"
+            description="Please select a diagram from the dropdown above to view its analysis."
+          />
         )}
       </div>
+
+      {/* Image Viewer Modal */}
+      <ImageViewerModal
+        isOpen={isImageViewerOpen}
+        onClose={() => setIsImageViewerOpen(false)}
+        imageData={imageData}
+        filename={imageFilename}
+      />
     </div>
   );
 };
