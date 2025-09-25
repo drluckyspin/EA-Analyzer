@@ -503,7 +503,6 @@ async def store_analyzed_diagram(
 ):
     """Store an analyzed diagram in the database."""
     try:
-        import json
         from ea_analyzer.models import ElectricalDiagram
 
         # Parse diagram data
@@ -561,8 +560,6 @@ async def store_analyzed_diagram(
 
         # Clean up temp files
         if temp_dir.exists():
-            import shutil
-
             shutil.rmtree(temp_dir)
 
         return StorageResult(
