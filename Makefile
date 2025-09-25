@@ -155,6 +155,22 @@ build: check-tools ## Build the package
 	$(UV) build
 	@echo "$(GREEN)✓ Package built successfully!$(NC)"
 
+update_version: ## Update version.json with current git commit hash and build time
+	@source scripts/log.bash && log_separator
+	@echo "$(BLUE)Updating version information...$(NC)"
+	@if [ -d .git ]; then \
+		COMMIT_HASH=$$(git rev-parse --short HEAD 2>/dev/null || echo "unknown"); \
+		echo "$(GREEN)✓ Git commit hash: $$COMMIT_HASH$(NC)"; \
+	else \
+		COMMIT_HASH="unknown"; \
+		echo "$(YELLOW)⚠ No git repository found, using 'unknown'$(NC)"; \
+	fi; \
+	BUILD_TIME=$$(date -u +"%Y-%m-%dT%H:%M:%SZ"); \
+	echo "$(GREEN)✓ Build time: $$BUILD_TIME$(NC)"; \
+	jq --arg commit "$$COMMIT_HASH" --arg build_time "$$BUILD_TIME" '.COMMIT = $$commit | .BUILD_TIME = $$build_time' frontend/version.json > frontend/version.json.tmp && \
+	mv frontend/version.json.tmp frontend/version.json
+	@echo "$(GREEN)✓ Version information updated!$(NC)"
+
 # Running
 
 # Testing
@@ -304,7 +320,7 @@ run-demo: ensure-venv start ## Run complete demo
 	./ea-analyzer-cli.sh db protection-schemes
 	@echo "$(GREEN)✓ Demo completed!$(NC)"
 
-run: check-tools ## Build and run the complete web application (frontend + backend)
+run: check-tools update_version ## Build and run the complete web application (frontend + backend)
 	@source scripts/log.bash && log_separator
 	@echo "$(BLUE)Building and starting EA-Analyzer Web Application...$(NC)"
 	@echo "$(YELLOW)Building Docker images...$(NC)"
