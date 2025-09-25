@@ -119,7 +119,13 @@ const getLayoutedElements = (
   return { nodes: positionedNodes, edges: processedEdges };
 };
 
-export const GraphVisualizer: React.FC = () => {
+interface GraphVisualizerProps {
+  selectedDiagramId?: string | null;
+}
+
+export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
+  selectedDiagramId: initialDiagramId,
+}) => {
   const [diagrams, setDiagrams] = useState<Diagram[]>([]);
   const [selectedDiagram, setSelectedDiagram] = useState<Diagram | null>(null);
   const [graphData, setGraphData] = useState<GraphData | null>(null);
@@ -137,8 +143,18 @@ export const GraphVisualizer: React.FC = () => {
         const diagramsData = await apiClient.getDiagrams();
         setDiagrams(diagramsData);
 
-        // Auto-select first diagram if available
-        if (diagramsData.length > 0) {
+        // If an initial diagram ID is provided, select it; otherwise auto-select first diagram
+        if (
+          initialDiagramId &&
+          diagramsData.some((d) => d.diagram_id === initialDiagramId)
+        ) {
+          const targetDiagram = diagramsData.find(
+            (d) => d.diagram_id === initialDiagramId
+          );
+          if (targetDiagram) {
+            setSelectedDiagram(targetDiagram);
+          }
+        } else if (diagramsData.length > 0) {
           setSelectedDiagram(diagramsData[0]);
         }
       } catch (err) {
@@ -151,7 +167,7 @@ export const GraphVisualizer: React.FC = () => {
     };
 
     loadDiagrams();
-  }, []);
+  }, [initialDiagramId]);
 
   // Load graph data when diagram is selected
   useEffect(() => {
@@ -278,14 +294,26 @@ export const GraphVisualizer: React.FC = () => {
 
   return (
     <div className="h-full w-full flex flex-col">
-      {/* Diagram Selector Bar */}
-      <div className="h-16 border-b bg-white flex items-center px-6">
-        <DiagramSelector
-          diagrams={diagrams}
-          selectedDiagram={selectedDiagram}
-          onSelect={handleDiagramSelect}
-          loading={loading}
-        />
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Diagram Visualization
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Interactive graph visualization of electrical diagrams
+            </p>
+          </div>
+          <div className="flex items-center">
+            <DiagramSelector
+              diagrams={diagrams}
+              selectedDiagram={selectedDiagram}
+              onSelect={handleDiagramSelect}
+              loading={loading}
+            />
+          </div>
+        </div>
       </div>
 
       {/* React Flow canvas */}

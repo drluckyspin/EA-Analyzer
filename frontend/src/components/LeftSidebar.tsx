@@ -12,13 +12,13 @@ interface LeftSidebarProps {
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
-  activeMenuItem = "Analyze",
+  activeMenuItem = "Library",
   onMenuItemClick,
 }) => {
   const menuItems = [
     {
-      id: "Analyze",
-      label: "Analyze",
+      id: "Library",
+      label: "Library",
       icon: BarChart3,
     },
     {
