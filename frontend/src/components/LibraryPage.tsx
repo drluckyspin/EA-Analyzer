@@ -11,10 +11,12 @@ import {
   GitBranch,
   Activity,
   BarChart3,
+  Plus,
 } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { Diagram, DiagramDetail } from "@/types";
 import { nodeTypeColors, edgeTypeColors } from "@/lib/theme";
+import { UploadDiagramModal } from "./UploadDiagramModal";
 
 interface LibraryPageProps {
   onNavigateToReview?: (diagramId: string) => void;
@@ -32,6 +34,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   useEffect(() => {
     loadDiagrams();
@@ -200,9 +203,19 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
               Manage your diagram collection ({diagrams.length} diagrams)
             </p>
           </div>
-          <Button onClick={loadDiagrams} variant="outline" size="sm">
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setIsUploadModalOpen(true)}
+              size="sm"
+              className="bg-slate-600 hover:bg-slate-700 text-white"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add Diagram
+            </Button>
+            <Button onClick={loadDiagrams} variant="outline" size="sm">
+              Refresh
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -264,12 +277,15 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
                                 </div>
                               </div>
                               <div className="ml-3 min-w-0 flex-1">
-                                <div
-                                  className="text-sm font-medium text-gray-900 truncate"
-                                  title={diagram.title}
+                                <button
+                                  onClick={() =>
+                                    onNavigateToReview?.(diagram.diagram_id)
+                                  }
+                                  className="text-sm font-medium text-gray-900 hover:text-gray-700 cursor-pointer truncate text-left w-full"
+                                  title={`View ${diagram.title}`}
                                 >
                                   {diagram.title}
-                                </div>
+                                </button>
                                 <div className="text-xs text-gray-500 truncate">
                                   {diagram.diagram_id}
                                 </div>
@@ -418,6 +434,13 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
           </div>
         )}
       </div>
+
+      {/* Upload Modal */}
+      <UploadDiagramModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onSuccess={loadDiagrams}
+      />
     </div>
   );
 };
