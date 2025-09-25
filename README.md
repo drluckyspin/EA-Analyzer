@@ -57,7 +57,7 @@ AMPY Electrical Assembly Analyzer is a specialized tool designed to parse electr
    ```bash
    git clone <repository-url>
    cd EA-Analyzer
-  ```
+   ```
 
 3. **Set up environment variables** (for LLM integration):
 
@@ -80,7 +80,6 @@ AMPY Electrical Assembly Analyzer is a specialized tool designed to parse electr
 **Analyze an electrical diagram image using LLM**:
 
 ```bash
-
 # Start all of the components
 make run 
 
