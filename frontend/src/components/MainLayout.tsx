@@ -6,9 +6,10 @@ import { LeftSidebar } from "./LeftSidebar";
 import { GraphVisualizer } from "./GraphVisualizer";
 import { AnalyzePage } from "./AnalyzePage";
 import { NewAnalyzePage } from "./NewAnalyzePage";
+import { LibraryPage } from "./LibraryPage";
 
 export const MainLayout: React.FC = () => {
-  const [activeMenuItem, setActiveMenuItem] = useState<string>("Analyze");
+  const [activeMenuItem, setActiveMenuItem] = useState<string>("Library");
 
   const handleMenuItemClick = (item: string) => {
     setActiveMenuItem(item);
@@ -16,14 +17,14 @@ export const MainLayout: React.FC = () => {
 
   const renderContent = () => {
     switch (activeMenuItem) {
-      case "Analyze":
-        return <NewAnalyzePage />;
+      case "Library":
+        return <LibraryPage />;
       case "Review":
         return <AnalyzePage />;
       case "Visualize":
         return <GraphVisualizer />;
       default:
-        return <NewAnalyzePage />;
+        return <LibraryPage />;
     }
   };
 

@@ -84,18 +84,29 @@ export const DiagramSelector: React.FC<DiagramSelectorProps> = ({
         onValueChange={handleValueChange}
         disabled={loading || diagrams.length === 0}
       >
-        <SelectTrigger className="w-auto min-w-[600px] max-w-[800px]">
-          <SelectValue placeholder="Select a diagram..." />
+        <SelectTrigger className="w-96">
+          <SelectValue placeholder="Select a diagram...">
+            {selectedDiagram && (
+              <div className="flex flex-col w-full text-left py-1">
+                <span className="font-medium text-sm leading-tight truncate">
+                  {selectedDiagram.title}
+                </span>
+                <span className="text-xs text-muted-foreground mt-1">
+                  Stored: {getStorageDate(selectedDiagram.diagram_id)}
+                </span>
+              </div>
+            )}
+          </SelectValue>
         </SelectTrigger>
-        <SelectContent className="w-auto min-w-[600px] max-w-[800px]">
+        <SelectContent className="w-96">
           {diagrams.map((diagram) => (
             <SelectItem
               key={diagram.diagram_id}
               value={diagram.diagram_id}
-              className="py-3"
+              className="py-3 data-[highlighted]:bg-blue-50 data-[highlighted]:text-blue-900"
             >
               <div className="flex flex-col w-full">
-                <span className="font-medium text-sm leading-tight">
+                <span className="font-medium text-sm leading-tight truncate">
                   {diagram.title}
                 </span>
                 <span className="text-xs text-muted-foreground mt-1">
