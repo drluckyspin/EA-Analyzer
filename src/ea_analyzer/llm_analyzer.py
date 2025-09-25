@@ -5,9 +5,43 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 
 from .models import ElectricalDiagram
+
+
+def _load_prompt_from_file() -> str:
+    """Load the electrical diagram analysis prompt from text file.
+
+    Returns:
+        The prompt string for LLM analysis
+
+    Raises:
+        ValueError: If the prompt file is not found or cannot be read
+    """
+    # Load prompt from electrical_diagram.prompt file
+    prompt_file = Path(__file__).parent / "electrical_diagram.prompt"
+    if not prompt_file.exists():
+        raise ValueError(
+            f"Prompt file not found: {prompt_file}. "
+            "Please ensure the electrical_diagram.prompt file exists in the src/ea_analyzer directory."
+        )
+
+    try:
+        with open(prompt_file, "r", encoding="utf-8") as f:
+            prompt = f.read().strip()
+    except Exception as e:
+        raise ValueError(f"Error reading prompt file: {e}") from e
+
+    if not prompt:
+        raise ValueError(
+            "Prompt file is empty. Please ensure the file contains the required prompt."
+        )
+    return prompt
+
+
+# Load the prompt from text file
+PROMPT = _load_prompt_from_file()
 
 # Simplified JSON Schema for structured output
 ELECTRICAL_DIAGRAM_SCHEMA = {
@@ -117,94 +151,6 @@ ELECTRICAL_DIAGRAM_SCHEMA = {
     "required": ["metadata", "ontology", "nodes", "edges", "calculations"],
     "additionalProperties": False,
 }
-
-
-# Detailed prompt for structured JSON output
-PROMPT = """You are an expert in power systems and knowledge graph extraction.
-
-Analyze the provided electrical one-line diagram image and return a JSON object with this EXACT structure:
-
-{
-  "metadata": {
-    "title": "Diagram Title",
-    "source_image": "path/to/image.png", 
-    "extracted_at": "2024-01-01T00:00:00Z"
-  },
-  "ontology": {
-    "node_types": {
-      "GridSource": {"attrs": ["id", "name", "kv", "frequency_hz", "sc_mva", "x_over_r"]},
-      "Transformer": {"attrs": ["id", "name", "mva_ratings", "hv_kv", "lv_kv", "vector_group", "impedance_pct", "cooling", "notes"]},
-      "Breaker": {"attrs": ["id", "name", "kv_class", "continuous_a", "interrupting_ka", "type", "position", "normally_open"]},
-      "Busbar": {"attrs": ["id", "name", "kv", "ampacity_a"]},
-      "Feeder": {"attrs": ["id", "name", "kv", "load_desc"]},
-      "SurgeArrester": {"attrs": ["id", "class", "kv", "location"]},
-      "PotentialTransformer": {"attrs": ["id", "ratio", "purpose"]},
-      "CurrentTransformer": {"attrs": ["id", "ratio", "purpose"]},
-      "Meter": {"attrs": ["id", "purpose"]},
-      "CapacitorBank": {"attrs": ["id", "kvar", "kv_class", "qty"]},
-      "Battery": {"attrs": ["id", "dc_v", "purpose"]},
-      "RelayFunction": {"attrs": ["id", "device_code", "description"]}
-    },
-    "edge_types": {
-      "CONNECTS_TO": {"attrs": ["via", "notes"]},
-      "PROTECTS": {"attrs": ["notes"]},
-      "MEASURES": {"attrs": ["notes"]},
-      "CONTROLS": {"attrs": ["notes"]},
-      "POWERED_BY": {"attrs": []},
-      "LOCATED_ON": {"attrs": []}
-    }
-  },
-  "nodes": [
-    {
-      "id": "GS_A",
-      "type": "GridSource", 
-      "name": "Utility Source",
-      "extra_attrs": {
-        "kv": 115,
-        "frequency_hz": 60,
-        "sc_mva": 5000,
-        "x_over_r": 8
-      }
-    }
-  ],
-  "edges": [
-    {
-      "from_": "GS_A",
-      "to": "BUS1", 
-      "type": "CONNECTS_TO",
-      "extra_attrs": {
-        "via": "Cable",
-        "notes": null
-      }
-    }
-  ],
-  "calculations": {
-    "short_circuit": {
-      "first_cycle_asym_ka": 12.4,
-      "one_point_five_cycles_sym_ka": 7.2
-    },
-    "breaker_spec": {
-      "type": "VB1 vacuum",
-      "kv_class": 13.8,
-      "continuous_a": 1200,
-      "interrupting_ka_range": "15-20 kA",
-      "k_factor": 1.0
-    }
-  }
-}
-
-## Key Rules:
-- Each component must have a unique "id"
-- Use consistent IDs: "GS_A", "GS_B", "TX1", "TX2", "BUS1", "BUS2", "MAIN1", "MAIN2", "BTIE", "FDR1..FDRn"
-- All breakers: type "VB1 vacuum", 13.8 kV, 1200 A continuous, 15–20 kA interrupting
-- Put all component attributes in the "extra_attrs" object
-- Put all edge attributes in the "extra_attrs" object
-- Preserve numeric values exactly as shown (kV, MVA, kA, etc.)
-- If a value is unreadable or missing, set it to null
-- Include short-circuit values from diagram callout boxes
-- Extract all visible components and connections
-
-Return only valid JSON matching this exact structure."""
 
 
 class LLMAnalyzer:
@@ -329,7 +275,7 @@ class LLMAnalyzer:
         mime = mime_mapping.get(ext, "application/octet-stream")
         return base64.b64encode(data).decode("utf-8"), mime
 
-    def _ensure_json(self, text: str) -> Dict[str, Any]:
+    def _ensure_json(self, text: str) -> dict[str, Any]:
         """Extract JSON from text response."""
         # Extract the first {...} block; models sometimes wrap in code fences
         fence_match = re.search(r"\{.*\}\s*$", text, flags=re.S)
@@ -386,7 +332,10 @@ class LLMAnalyzer:
             model=self.model,
             max_tokens=4000,
             temperature=0.0,  # Set to 0 for deterministic output
-            system=f"Return only valid JSON that follows this exact schema: {json.dumps(ELECTRICAL_DIAGRAM_SCHEMA)}",
+            system=(
+                f"Return only valid JSON that follows this exact schema: "
+                f"{json.dumps(ELECTRICAL_DIAGRAM_SCHEMA)}"
+            ),
             messages=[
                 {
                     "role": "user",
@@ -416,7 +365,8 @@ class LLMAnalyzer:
             import google.generativeai as genai
         except ImportError:
             raise ImportError(
-                "Google Generative AI package not installed. Install with: pip install google-generativeai"
+                "Google Generative AI package not installed. "
+                "Install with: pip install google-generativeai"
             )
 
         genai.configure(api_key=self.api_key)
@@ -431,10 +381,11 @@ class LLMAnalyzer:
             },
         )
 
+        schema_json = json.dumps(ELECTRICAL_DIAGRAM_SCHEMA)
         result = model.generate_content(
             [
                 {"mime_type": mime, "data": b64},
-                f"{PROMPT}\n\nReturn JSON matching this schema: {json.dumps(ELECTRICAL_DIAGRAM_SCHEMA)}",
+                f"{PROMPT}\n\nReturn JSON matching this schema: {schema_json}",
             ],
             safety_settings=None,  # Use defaults
         )
