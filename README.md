@@ -1,6 +1,6 @@
 # Electrical Assembly Analyzer
 
-An Electrical diagram parsing and knowledge graph extraction tool.
+AMPY: An Electrical diagram parsing and electrical assembly graph extraction tool
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -8,7 +8,11 @@ An Electrical diagram parsing and knowledge graph extraction tool.
 
 ## About
 
-Electrical Assembly Analyzer is a specialized tool designed to parse electrical one-line diagrams and extract structured knowledge graphs from them. It's specifically built for electrical engineers, power system analysts, and automation professionals who need to work with electrical substation diagrams and similar power system schematics.
+AMPY Electrical Assembly Analyzer is a specialized tool designed to parse electrical one-line diagrams and extract structured knowledge graphs from them. It's specifically built for electrical engineers, power system analysts, and automation professionals who need to work with electrical substation diagrams and similar power system schematics.
+
+![AMPY Dashboard](docs/ampy-ui1.png)
+
+![AMPY Visualizer](docs/ampy-ui2.png)
 
 ### Key Capabilities
 
@@ -52,13 +56,8 @@ Electrical Assembly Analyzer is a specialized tool designed to parse electrical 
 
    ```bash
    git clone <repository-url>
-   cd EA-Parsing
-
-   # Create virtual environment and install dependencies
-   uv venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   uv pip install -e .
-   ```
+   cd EA-Analyzer
+  ```
 
 3. **Set up environment variables** (for LLM integration):
 
@@ -73,7 +72,7 @@ Electrical Assembly Analyzer is a specialized tool designed to parse electrical 
 4. **Verify installation**:
 
    ```bash
-   ./ea-analyzer-cli.sh check
+   make check
    ```
 
 ### Basic Usage
@@ -81,6 +80,10 @@ Electrical Assembly Analyzer is a specialized tool designed to parse electrical 
 **Analyze an electrical diagram image using LLM**:
 
 ```bash
+
+# Start all of the components
+make run 
+
 # Analyze image and extract structured data
 ./ea-analyzer-cli.sh analyze substation.png
 
@@ -139,10 +142,10 @@ Launch the complete web application with a single command:
 
 ```bash
 # Build and run the web application (frontend + backend + Neo4j)
-make run-web
+make run
 
 # For development with hot reload (recommended for UI work)
-make run-web-dev
+make run-dev
 
 # Access the application
 # Frontend:     http://localhost:3000
@@ -151,10 +154,10 @@ make run-web-dev
 # Neo4j:        http://localhost:7474
 
 # Stop the web application
-make stop-web
+make stop
 
 # For development mode
-make stop-web-dev
+make stop-dev
 ```
 
 **Development Mode Features:**
@@ -361,6 +364,7 @@ The Electrical Assembly Analyzer includes comprehensive Neo4j integration for st
    ```
 
 3. **View stored data summary**:
+
    ```bash
    ea-analyze neo4j summary
    ```

@@ -24,16 +24,18 @@ The web application consists of three main components:
 ### Using Docker Compose (Recommended)
 
 1. **Start all services**:
+
    ```bash
    docker-compose up -d
    ```
 
 2. **Access the application**:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8000
-   - Neo4j Browser: http://localhost:7474
+   - Frontend: <http://localhost:3000>
+   - Backend API: <http://localhost:8000>
+   - Neo4j Browser: <http://localhost:7474>
 
 3. **Load some data** (if not already loaded):
+
    ```bash
    # Use the CLI to analyze and store a diagram
    ./ea-analyzer-cli.sh analyze substation.png --store
@@ -44,16 +46,19 @@ The web application consists of three main components:
 #### Backend Setup
 
 1. **Navigate to backend directory**:
+
    ```bash
    cd backend
    ```
 
 2. **Install dependencies with uv**:
+
    ```bash
    uv sync
    ```
 
 3. **Start the FastAPI server**:
+
    ```bash
    uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
    ```
@@ -61,68 +66,79 @@ The web application consists of three main components:
 #### Frontend Setup
 
 1. **Navigate to frontend directory**:
+
    ```bash
    cd frontend
    ```
 
 2. **Install dependencies**:
+
    ```bash
    npm install
    ```
 
 3. **Start the development server**:
+
    ```bash
    npm run dev
    ```
 
-4. **Open your browser** to http://localhost:3000
+4. **Open your browser** to <http://localhost:3000>
 
 ## API Endpoints
 
 ### Diagrams
+
 - `GET /api/diagrams/` - List all diagrams
 - `GET /api/diagrams/{diagram_id}/summary` - Get diagram summary
 - `GET /api/diagrams/{diagram_id}/graph` - Get graph data for visualization
 - `DELETE /api/diagrams/{diagram_id}` - Delete a diagram
 
 ### Nodes
+
 - `GET /api/nodes/` - List nodes with optional filtering
 - `GET /api/nodes/{node_id}` - Get specific node details
 - `GET /api/nodes/{node_id}/connections` - Get node connections
 - `GET /api/nodes/types/list` - List all node types
 
 ### Edges
+
 - `GET /api/edges/` - List edges with optional filtering
 - `GET /api/edges/types/list` - List all edge types
 - `GET /api/edges/protection-schemes` - Get protection schemes
 - `GET /api/edges/paths/{from}/{to}` - Find paths between nodes
 
 ### Queries
+
 - `POST /api/queries/execute` - Execute custom Cypher queries
 - `GET /api/queries/examples` - Get example queries
 
 ## Environment Variables
 
 ### Backend
+
 - `NEO4J_URI` - Neo4j connection URI (default: bolt://localhost:7687)
 - `NEO4J_USERNAME` - Neo4j username (default: neo4j)
 - `NEO4J_PASSWORD` - Neo4j password (default: password)
 - `NEO4J_DATABASE` - Neo4j database name (default: neo4j)
 
 ### Frontend
-- `NEXT_PUBLIC_API_URL` - Backend API URL (default: http://localhost:8000)
+
+- `NEXT_PUBLIC_API_URL` - Backend API URL (default: <http://localhost:8000>)
 
 ## Development
 
 ### Backend Development
 
 The backend uses FastAPI with automatic API documentation available at:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+
+- Swagger UI: <http://localhost:8000/docs>
+- ReDoc: <http://localhost:8000/redoc>
 
 ### Frontend Development
 
 The frontend uses:
+
 - **Next.js 14** with App Router
 - **React Flow** for graph visualization
 - **Tailwind CSS** for styling
@@ -146,6 +162,7 @@ The frontend uses:
 ### Logs
 
 View service logs:
+
 ```bash
 # All services
 docker-compose logs -f
@@ -158,9 +175,9 @@ docker-compose logs -f neo4j
 
 ### Health Checks
 
-- Backend: http://localhost:8000/health
-- Frontend: http://localhost:3000
-- Neo4j: http://localhost:7474
+- Backend: <http://localhost:8000/health>
+- Frontend: <http://localhost:3000>
+- Neo4j: <http://localhost:7474>
 
 ## Production Deployment
 
