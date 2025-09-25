@@ -84,10 +84,10 @@ export const DiagramSelector: React.FC<DiagramSelectorProps> = ({
         onValueChange={handleValueChange}
         disabled={loading || diagrams.length === 0}
       >
-        <SelectTrigger className="w-96">
+        <SelectTrigger className="w-[500px] h-12 focus:ring-slate-300 focus:border-slate-300">
           <SelectValue placeholder="Select a diagram...">
             {selectedDiagram && (
-              <div className="flex flex-col w-full text-left py-1">
+              <div className="flex flex-col w-full text-left py-2">
                 <span className="font-medium text-sm leading-tight truncate">
                   {selectedDiagram.title}
                 </span>
@@ -98,12 +98,12 @@ export const DiagramSelector: React.FC<DiagramSelectorProps> = ({
             )}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="w-96">
+        <SelectContent className="w-[500px]">
           {diagrams.map((diagram) => (
             <SelectItem
               key={diagram.diagram_id}
               value={diagram.diagram_id}
-              className="py-3 data-[highlighted]:bg-blue-50 data-[highlighted]:text-blue-900"
+              className="h-12 py-2 hover:bg-slate-100 hover:text-slate-900"
             >
               <div className="flex flex-col w-full">
                 <span className="font-medium text-sm leading-tight truncate">

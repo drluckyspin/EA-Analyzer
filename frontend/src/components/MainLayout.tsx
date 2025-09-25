@@ -10,21 +10,48 @@ import { LibraryPage } from "./LibraryPage";
 
 export const MainLayout: React.FC = () => {
   const [activeMenuItem, setActiveMenuItem] = useState<string>("Library");
+  const [selectedDiagramId, setSelectedDiagramId] = useState<string | null>(
+    null
+  );
 
   const handleMenuItemClick = (item: string) => {
     setActiveMenuItem(item);
+    // Clear selected diagram when manually navigating to avoid confusion
+    if (item !== "Review") {
+      setSelectedDiagramId(null);
+    }
+  };
+
+  const handleNavigateToReview = (diagramId: string) => {
+    setSelectedDiagramId(diagramId);
+    setActiveMenuItem("Review");
+  };
+
+  const handleNavigateToVisualize = (diagramId: string) => {
+    setSelectedDiagramId(diagramId);
+    setActiveMenuItem("Visualize");
   };
 
   const renderContent = () => {
     switch (activeMenuItem) {
       case "Library":
-        return <LibraryPage />;
+        return (
+          <LibraryPage
+            onNavigateToReview={handleNavigateToReview}
+            onNavigateToVisualize={handleNavigateToVisualize}
+          />
+        );
       case "Review":
-        return <AnalyzePage />;
+        return <AnalyzePage selectedDiagramId={selectedDiagramId} />;
       case "Visualize":
-        return <GraphVisualizer />;
+        return <GraphVisualizer selectedDiagramId={selectedDiagramId} />;
       default:
-        return <LibraryPage />;
+        return (
+          <LibraryPage
+            onNavigateToReview={handleNavigateToReview}
+            onNavigateToVisualize={handleNavigateToVisualize}
+          />
+        );
     }
   };
 

@@ -18,7 +18,13 @@ interface DiagramSummary {
   metadata: Record<string, any>;
 }
 
-export const AnalyzePage: React.FC = () => {
+interface AnalyzePageProps {
+  selectedDiagramId?: string | null;
+}
+
+export const AnalyzePage: React.FC<AnalyzePageProps> = ({
+  selectedDiagramId: initialDiagramId,
+}) => {
   const [diagrams, setDiagrams] = useState<Diagram[]>([]);
   const [selectedDiagramId, setSelectedDiagramId] = useState<string>("");
   const [summary, setSummary] = useState<DiagramSummary | null>(null);
@@ -32,7 +38,14 @@ export const AnalyzePage: React.FC = () => {
       try {
         const diagramsData = await apiClient.getDiagrams();
         setDiagrams(diagramsData);
-        // Don't auto-select any diagram - start with blank tables
+
+        // If an initial diagram ID is provided, select it
+        if (
+          initialDiagramId &&
+          diagramsData.some((d) => d.diagram_id === initialDiagramId)
+        ) {
+          setSelectedDiagramId(initialDiagramId);
+        }
       } catch (err) {
         setError("Failed to load diagrams");
         console.error("Error loading diagrams:", err);
@@ -40,7 +53,7 @@ export const AnalyzePage: React.FC = () => {
     };
 
     loadDiagrams();
-  }, []);
+  }, [initialDiagramId]);
 
   // Load summary when diagram is selected
   useEffect(() => {
