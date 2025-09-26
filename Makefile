@@ -57,6 +57,8 @@ RED := \033[0;31m
 GREEN := \033[0;32m
 YELLOW := \033[0;33m
 BLUE := \033[0;34m
+DIM := \033[2m
+RESET := \033[0m
 NC := \033[0m # No Color
 
 help: ## Show this help message
@@ -300,7 +302,36 @@ stop: ## Stop all web application services
 
 ping: ## Check all services are running (Backend, Frontend)
 	@source scripts/log.bash && log_separator
-	@./scripts/health-check.sh
+	@echo "$(BLUE)Checking health of EA-Analyzer services$(RESET)"
+	@ENVIRONMENT=$$(grep '^ENVIRONMENT=' .env | cut -d'=' -f2 | sed "s/['\"]//g" 2>/dev/null || echo "local"); \
+	NEO4J_URI=$$(grep '^NEO4J_URI=' .env | cut -d'=' -f2 | sed "s/['\"]//g" 2>/dev/null || echo "bolt://localhost:7687"); \
+	echo ""; \
+	echo "$(BLUE)Current Configuration:$(RESET)"; \
+	echo "  ENVIRONMENT=$$ENVIRONMENT, NEO4J_URI=$$NEO4J_URI"; \
+	echo ""; \
+	echo " Infrastructure Services:"; \
+	echo "  • Neo4j $(DIM)(Graph Database - LOCAL)$(RESET) $(BLUE)[http://localhost:7474]$(RESET)"; \
+	if ./ea-analyzer-cli.sh db ping >/dev/null 2>&1; then \
+		echo "    $(GREEN)✓$(RESET)  Neo4j is healthy"; \
+	else \
+		echo "    $(RED)🅇$(RESET)  Neo4j is not responding"; \
+	fi; \
+	echo ""; \
+	echo " Application Services:"; \
+	echo "  • Frontend $(DIM)(Next.js)$(RESET) $(BLUE)[http://localhost:3000]$(RESET)"; \
+	if curl -s -I http://localhost:3000 >/dev/null 2>&1; then \
+		echo "    $(GREEN)✓$(RESET)  Frontend is healthy"; \
+	else \
+		echo "    $(RED)🅇$(RESET)  Frontend is not responding"; \
+	fi; \
+	echo "  • Backend API $(DIM)(FastAPI)$(RESET) $(BLUE)[http://localhost:8000]$(RESET)"; \
+	if curl -s http://localhost:8000/health >/dev/null 2>&1; then \
+		echo "    $(GREEN)✓$(RESET)  Backend API is healthy"; \
+	else \
+		echo "    $(RED)🅇$(RESET)  Backend API is not responding"; \
+	fi; \
+	echo ""; \
+	echo "Health check complete!"
 
 logs: ## Show all web application service logs
 	@source scripts/log.bash && log_separator
