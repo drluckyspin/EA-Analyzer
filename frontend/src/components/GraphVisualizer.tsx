@@ -23,6 +23,8 @@ import { Diagram, GraphData } from "@/types";
 import { DiagramSelector } from "./DiagramSelector";
 import { CustomNode } from "./CustomNode";
 import { CustomEdge } from "./CustomEdge";
+import FloatingEdge from "./FloatingEdge";
+import FloatingConnectionLine from "./FloatingConnectionLine";
 import { NoSelectionState } from "./NoSelectionState";
 import { saveNodePositions, loadNodePositions } from "@/lib/cookies";
 
@@ -31,15 +33,16 @@ const nodeTypes: NodeTypes = {
   custom: CustomNode,
 };
 
-// Use CustomEdge for all edge types to maintain labels and colors
+// Use FloatingEdge for all edge types to get floating behavior with labels and colors
 const edgeTypes: EdgeTypes = {
-  custom: CustomEdge,
-  CONNECTS_TO: CustomEdge,
-  PROTECTS: CustomEdge,
-  MEASURES: CustomEdge,
-  CONTROLS: CustomEdge,
-  POWERED_BY: CustomEdge,
-  LOCATED_ON: CustomEdge,
+  floating: FloatingEdge,
+  custom: FloatingEdge,
+  CONNECTS_TO: FloatingEdge,
+  PROTECTS: FloatingEdge,
+  MEASURES: FloatingEdge,
+  CONTROLS: FloatingEdge,
+  POWERED_BY: FloatingEdge,
+  LOCATED_ON: FloatingEdge,
 };
 
 // Layout algorithm for positioning nodes
@@ -111,14 +114,14 @@ const getLayoutedElements = (
     };
   });
 
-  // Process edges to use the correct edge type for CustomEdge rendering
+  // Process edges to use the floating edge type
   const processedEdges = edges.map((edge) => {
     const edgeType =
       (edge.data && edge.data.type) || edge.type || "CONNECTS_TO";
     console.log("Processing edge:", edge.id, "with type:", edgeType);
     return {
       ...edge,
-      type: "custom", // Always use custom type to ensure CustomEdge is used
+      type: "floating", // Use floating type for floating edge behavior
       data: {
         ...edge.data,
         type: edgeType,
@@ -352,6 +355,7 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
             onConnect={onConnect}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
+            connectionLineComponent={FloatingConnectionLine}
             fitView
             attributionPosition="bottom-left"
           >
