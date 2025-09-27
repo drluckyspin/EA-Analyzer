@@ -18,10 +18,12 @@ export const CustomNode: React.FC<NodeProps> = ({ data, selected }) => {
         selected && "ring-2 ring-primary ring-offset-2"
       )}
     >
+      {/* Invisible handles for React Flow to connect edges - they provide connection points but aren't visible */}
       <Handle
         type="target"
         position={Position.Top}
-        className="w-3 h-3 bg-primary"
+        className="w-0 h-0 opacity-0"
+        style={{ visibility: "hidden" }}
       />
 
       <CardContent className="p-3">
@@ -36,7 +38,8 @@ export const CustomNode: React.FC<NodeProps> = ({ data, selected }) => {
       <Handle
         type="source"
         position={Position.Bottom}
-        className="w-3 h-3 bg-primary"
+        className="w-0 h-0 opacity-0"
+        style={{ visibility: "hidden" }}
       />
     </Card>
   );

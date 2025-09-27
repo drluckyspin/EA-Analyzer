@@ -6,6 +6,8 @@ import { getEdgeTypeColor } from "@/lib/theme";
 
 export const CustomEdge: React.FC<EdgeProps> = ({
   id,
+  source,
+  target,
   sourceX,
   sourceY,
   targetX,

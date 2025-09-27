@@ -31,9 +31,9 @@ const nodeTypes: NodeTypes = {
   custom: CustomNode,
 };
 
+// Use CustomEdge for all edge types to maintain labels and colors
 const edgeTypes: EdgeTypes = {
   custom: CustomEdge,
-  // Map all electrical edge types to our custom edge component
   CONNECTS_TO: CustomEdge,
   PROTECTS: CustomEdge,
   MEASURES: CustomEdge,
@@ -111,11 +111,20 @@ const getLayoutedElements = (
     };
   });
 
-  // Process edges to ensure they use the correct React Flow edge type
-  const processedEdges = edges.map((edge) => ({
-    ...edge,
-    type: String((edge.data && edge.data.type) || edge.type || "custom"), // Use the edge type from data, fallback to edge.type, then custom
-  }));
+  // Process edges to use the correct edge type for CustomEdge rendering
+  const processedEdges = edges.map((edge) => {
+    const edgeType =
+      (edge.data && edge.data.type) || edge.type || "CONNECTS_TO";
+    console.log("Processing edge:", edge.id, "with type:", edgeType);
+    return {
+      ...edge,
+      type: "custom", // Always use custom type to ensure CustomEdge is used
+      data: {
+        ...edge.data,
+        type: edgeType,
+      },
+    };
+  });
 
   return { nodes: positionedNodes, edges: processedEdges };
 };
@@ -194,6 +203,12 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
           );
         }
 
+        // Debug: Log the raw data
+        console.log("Raw graph data:", data);
+        console.log("Number of nodes:", data.nodes.length);
+        console.log("Number of edges:", data.edges.length);
+        console.log("Sample edge:", data.edges[0]);
+
         // Apply layout and set nodes/edges
         const { nodes: layoutedNodes, edges: layoutedEdges } =
           getLayoutedElements(
@@ -201,6 +216,12 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
             data.edges,
             selectedDiagram.diagram_id
           );
+
+        console.log(
+          "After layout - Number of processed edges:",
+          layoutedEdges.length
+        );
+        console.log("Sample processed edge:", layoutedEdges[0]);
 
         // Debug: Check for duplicate node IDs
         const nodeIds = layoutedNodes.map((node) => node.id);
@@ -224,6 +245,10 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
             index === self.findIndex((e) => e.id === edge.id)
         );
 
+        console.log("Setting nodes:", uniqueNodes.length);
+        console.log("Setting edges:", uniqueEdges.length);
+        console.log("Sample edge being set:", uniqueEdges[0]);
+
         setNodes(uniqueNodes);
         setEdges(uniqueEdges);
       } catch (err) {
@@ -236,7 +261,7 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
     };
 
     loadGraphData();
-  }, [selectedDiagram]);
+  }, [selectedDiagram, setNodes, setEdges]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
