@@ -115,8 +115,7 @@ export const MainLayout: React.FC = () => {
 
         {/* Footer */}
         <div className="bg-white border-t border-gray-200 px-6 py-2">
-          <div className="flex items-center justify-between text-xs text-gray-500">
-            <div>© 2025 Bain & Company. All rights reserved.</div>
+          <div className="flex items-center justify-end text-xs text-gray-500">
             <div className="flex items-center space-x-4">
               <span>v{versionInfo.version}</span>
               <span>•</span>

@@ -157,7 +157,8 @@ build: check-tools ## Build the package
 	$(UV) build
 	@echo "$(GREEN)✓ Package built successfully!$(NC)"
 
-update_version: ## Update version.json with current git commit hash and build time
+# Update version.json with current git commit hash and build time
+update_version: 
 	@source scripts/log.bash && log_separator
 	@echo "$(BLUE)Updating version information...$(NC)"
 	@if [ -d .git ]; then \
@@ -340,7 +341,7 @@ logs: ## Show all web application service logs
 	$(DOCKER_COMPOSE) logs -f
 
 
-run-demo: ensure-venv start ## Run complete demo
+run-demo: update_version ensure-venv start ## Run complete demo
 	@source scripts/log.bash && log_separator
 	@echo "$(BLUE)Running Complete EA-Analyzer Demo$(NC)"
 	@echo "$(YELLOW)1. Storing diagram data...$(NC)"
@@ -369,7 +370,7 @@ run: check-tools update_version ## Build and run the complete web application (f
 	@echo ""
 	@echo "$(YELLOW)Use 'make stop' to stop all services$(NC)"
 
-run-dev: check-tools ## Build and run the web application in development mode with hot reload (foreground)
+run-dev: check-tools update_version## Build and run the web application in development mode with hot reload (foreground)
 	@source scripts/log.bash && log_separator
 	@echo "$(BLUE)Building and starting EA-Analyzer Web Application (Development Mode)...$(NC)"
 	@echo "$(YELLOW)Building Docker images for development...$(NC)"
