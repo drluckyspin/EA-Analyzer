@@ -53,19 +53,25 @@ function FloatingEdge({
           ...style,
           stroke: strokeColor,
           strokeWidth: 2,
+          label: "default arrow",
         }}
       />
       {data?.type && (
-        <text key={`${id}-label`}>
-          <textPath
-            key={`${id}-textpath`}
-            href={`#${id}`}
-            style={{ fontSize: 12, fill: strokeColor }}
-            startOffset="50%"
-            textAnchor="middle"
-          >
-            {String(data.type)}
-          </textPath>
+        <text
+          key={`${id}-label`}
+          x={(sx + tx) / 2}
+          y={(sy + ty) / 2 - 10}
+          style={{
+            fontSize: 12,
+            fill: strokeColor,
+            textAnchor: "middle",
+            dominantBaseline: "middle",
+            background: "white",
+            padding: "2px 4px",
+            borderRadius: "3px",
+          }}
+        >
+          {String(data.type)}
         </text>
       )}
     </>
